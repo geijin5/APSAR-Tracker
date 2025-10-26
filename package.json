@@ -1,0 +1,20 @@
+{
+  "name": "apsar-tracker",
+  "version": "1.0.0",
+  "description": "Anaconda Pintler Search and Rescue Asset Management System",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "mongodb": "^6.20.0"
+  }
+}
