@@ -40,5 +40,8 @@ USER apsar
 
 EXPOSE 5000
 
+# Set production environment  
+ENV NODE_ENV=production
+
 # Start application with PM2
 CMD ["pm2-runtime", "start", "backend/server.js", "--name", "apsar-tracker"]

@@ -39,26 +39,38 @@ app.get('/api/health', (req, res) => {
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
   const fs = require('fs');
+  const frontendPath = path.join(process.cwd(), 'frontend/dist');
+  
   const debugInfo = {
-    nodeEnv: process.env.NODE_ENV,
+    nodeEnv: process.env.NODE_ENV || 'undefined',
+    port: process.env.PORT || 'undefined',
     currentDir: __dirname,
     workingDir: process.cwd(),
-    frontendPath: path.join(__dirname, '../frontend/dist'),
+    frontendPath: frontendPath,
     backendPath: __dirname,
+    timestamp: new Date().toISOString()
   };
   
   try {
     // Check if frontend dist exists
-    debugInfo.frontendExists = fs.existsSync(path.join(__dirname, '../frontend/dist'));
-    debugInfo.frontendIndexExists = fs.existsSync(path.join(__dirname, '../frontend/dist/index.html'));
+    debugInfo.frontendExists = fs.existsSync(frontendPath);
+    debugInfo.frontendIndexExists = fs.existsSync(path.join(frontendPath, 'index.html'));
     
-    // List files in current directory
+    // List files in working directory
     debugInfo.currentDirFiles = fs.readdirSync(process.cwd());
     
     // Try to list frontend dist contents
     if (debugInfo.frontendExists) {
-      debugInfo.frontendFiles = fs.readdirSync(path.join(__dirname, '../frontend/dist'));
+      debugInfo.frontendFiles = fs.readdirSync(frontendPath);
     }
+    
+    // Check if we can read index.html
+    if (debugInfo.frontendIndexExists) {
+      const indexContent = fs.readFileSync(path.join(frontendPath, 'index.html'), 'utf8');
+      debugInfo.indexFileSize = indexContent.length;
+      debugInfo.hasReactRoot = indexContent.includes('root');
+    }
+    
   } catch (error) {
     debugInfo.error = error.message;
   }
@@ -66,63 +78,78 @@ app.get('/api/debug', (req, res) => {
   res.json(debugInfo);
 });
 
-// Serve static files from the React build in production
-if (process.env.NODE_ENV === 'production') {
-  const fs = require('fs');
+// Always serve frontend in deployed environments (regardless of NODE_ENV)
+const fs = require('fs');
+
+// Based on debug info, frontend is at /app/frontend/dist
+const frontendPath = path.join(process.cwd(), 'frontend/dist');
+const indexPath = path.join(frontendPath, 'index.html');
+
+console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+console.log(`📂 Current working directory: ${process.cwd()}`);
+console.log(`🎯 Frontend path: ${frontendPath}`);
+console.log(`📄 Index path: ${indexPath}`);
+console.log(`✅ Frontend directory exists: ${fs.existsSync(frontendPath)}`);
+console.log(`✅ Index.html exists: ${fs.existsSync(indexPath)}`);
+
+if (fs.existsSync(frontendPath) && fs.existsSync(indexPath)) {
+  console.log(`🚀 Configuring Express to serve React app...`);
   
-  // Based on debug info, we know the frontend is at /app/frontend/dist
-  const frontendPath = path.join(process.cwd(), 'frontend/dist');
-  const indexPath = path.join(frontendPath, 'index.html');
+  // Serve static files (JS, CSS, images, etc.)
+  app.use(express.static(frontendPath, {
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
+    setHeaders: (res, path) => {
+      console.log(`📦 Serving static file: ${path}`);
+    }
+  }));
   
-  console.log(`🔍 Checking frontend path: ${frontendPath}`);
-  console.log(`🔍 Index file path: ${indexPath}`);
-  console.log(`📁 Frontend exists: ${fs.existsSync(frontendPath)}`);
-  console.log(`📄 Index exists: ${fs.existsSync(indexPath)}`);
+  console.log(`✅ Static file middleware configured for: ${frontendPath}`);
   
-  if (fs.existsSync(frontendPath) && fs.existsSync(indexPath)) {
-    console.log(`✅ Setting up static file serving from: ${frontendPath}`);
-    
-    // Serve static files from frontend build  
-    app.use(express.static(frontendPath, {
-      maxAge: '1d', // Cache static assets for 1 day
-      index: false  // Don't automatically serve index.html for directory requests
-    }));
-    
-    // Handle React routing - send all non-API requests to index.html
-    app.get('*', (req, res) => {
-      console.log(`📝 Serving index.html for route: ${req.path}`);
-      res.sendFile(indexPath, (err) => {
-        if (err) {
-          console.error('❌ Error serving index.html:', err);
-          res.status(500).send('Error loading application');
-        }
-      });
-    });
-    
-    console.log(`🚀 Frontend serving configured successfully`);
-  } else {
-    console.log('❌ Frontend files not found, serving error page');
-    app.get('*', (req, res) => {
-      res.status(404).send(`
-        <h1>Frontend Build Not Found</h1>
-        <p>Expected location: ${frontendPath}</p>
-        <p>Index file: ${indexPath}</p>
-        <p>Frontend exists: ${fs.existsSync(frontendPath)}</p>
-        <p>Index exists: ${fs.existsSync(indexPath)}</p>
-        <p><a href="/api/debug">View Debug Info</a></p>
-        <p><a href="/api/health">API Health Check</a></p>
-      `);
-    });
-  }
-} else {
-  // Development mode
+  // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
-    res.send(`
-      <h1>APSAR Tracker - Development Mode</h1>
-      <p>Backend is running on port ${process.env.PORT || 5000}</p>
-      <p>Frontend should be running separately on port 3000</p>
-      <p><a href="/api/health">API Health Check</a></p>
-      <p><a href="/api/debug">Debug Info</a></p>
+    console.log(`🔍 Catch-all route hit for: ${req.path}`);
+    
+    // Skip if it's an API route (shouldn't happen, but just in case)
+    if (req.path.startsWith('/api/')) {
+      console.log(`❌ API route ${req.path} not found`);
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    console.log(`📤 Sending index.html for: ${req.path}`);
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error(`❌ Error serving index.html for ${req.path}:`, err);
+        res.status(500).send(`
+          <h1>Error Loading Application</h1>
+          <p>Failed to serve index.html</p>
+          <p>Error: ${err.message}</p>
+          <p><a href="/api/debug">Debug Info</a></p>
+        `);
+      } else {
+        console.log(`✅ Successfully served index.html for: ${req.path}`);
+      }
+    });
+  });
+  
+  console.log(`🎉 Frontend serving setup complete!`);
+} else {
+  console.log(`❌ Frontend files not found at ${frontendPath}`);
+  
+  // Fallback if frontend files don't exist
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    res.status(500).send(`
+      <h1>Frontend Files Not Found</h1>
+      <p><strong>Expected path:</strong> ${frontendPath}</p>
+      <p><strong>Index file:</strong> ${indexPath}</p>
+      <p><strong>Directory exists:</strong> ${fs.existsSync(frontendPath)}</p>
+      <p><strong>Index exists:</strong> ${fs.existsSync(indexPath)}</p>
+      <p><strong>Working directory:</strong> ${process.cwd()}</p>
+      <hr>
+      <p><a href="/api/debug">Full Debug Info</a> | <a href="/api/health">API Health</a></p>
     `);
   });
 }
