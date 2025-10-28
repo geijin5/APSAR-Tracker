@@ -25,9 +25,9 @@ const seedDatabase = async () => {
     const adminUser = new User({
       firstName: 'Admin',
       lastName: 'User',
-      username: 'admin',
+      username: 'myusername',        // ← Your custom username
       email: 'admin@apsar.org',
-      password: 'password123',
+      password: 'mypassword123',     // ← Your custom password
       role: 'admin',
       unit: 'Command'
     });
@@ -443,7 +443,7 @@ const seedDatabase = async () => {
     console.log('\n✅ Database seeded successfully!');
     console.log('\nTest Credentials (Username / Password):');
     console.log('======================================');
-    console.log('Admin:      admin / password123');
+    console.log('Admin:      myusername / mypassword123');  // ← Updated credentials
     console.log('Technician: tech / password123');
     console.log('Operator:   operator / password123');
     console.log('Viewer:     viewer / password123');

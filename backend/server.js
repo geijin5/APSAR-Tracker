@@ -55,7 +55,7 @@ app.get('/api/check-db', async (req, res) => {
       dbStatus.hasUsers = dbStatus.userCount > 0;
       
       // Check if admin user exists
-      const adminUser = await User.findOne({ username: 'admin' });
+      const adminUser = await User.findOne({ username: 'myusername' });
       dbStatus.hasAdminUser = !!adminUser;
       
       if (adminUser) {
@@ -86,7 +86,7 @@ app.post('/api/create-admin', async (req, res) => {
     const User = require('./models/User');
     
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ username: 'admin' });
+    const existingAdmin = await User.findOne({ username: 'myusername' });
     if (existingAdmin) {
       return res.status(400).json({ message: 'Admin user already exists' });
     }
@@ -95,9 +95,9 @@ app.post('/api/create-admin', async (req, res) => {
     const adminUser = new User({
       firstName: 'Admin',
       lastName: 'User',
-      username: 'admin',
+      username: 'myusername',        // ← Your custom username
       email: 'admin@apsar.org',
-      password: 'password123',
+      password: 'mypassword123',     // ← Your custom password
       role: 'admin',
       unit: 'Command',
       isActive: true
@@ -107,8 +107,8 @@ app.post('/api/create-admin', async (req, res) => {
     
     res.json({ 
       message: 'Admin user created successfully',
-      username: 'admin',
-      password: 'password123',
+      username: 'myusername',
+      password: 'mypassword123',
       note: 'Please change the password after first login'
     });
     
