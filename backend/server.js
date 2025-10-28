@@ -31,10 +31,21 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/checklists', require('./routes/checklists'));
 app.use('/api/appointments', require('./routes/appointments'));
 
-// Health check endpoint
+// Health check endpoint (must come before catch-all route)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'APSAR Tracker API is running' });
 });
+
+// Serve static files from the React build
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from frontend build
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  
+  // Handle React routing - send all non-API requests to index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
