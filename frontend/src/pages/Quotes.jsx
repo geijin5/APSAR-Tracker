@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import { printDocument, generatePrintableQuote } from '../utils/printUtils.jsx';
 
 export default function Quotes() {
   const { user } = useAuth();
@@ -65,6 +66,14 @@ export default function Quotes() {
     if (window.confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
       deleteMutation.mutate(quoteId);
     }
+  };
+
+  const handlePrintQuote = (e, quote) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const printComponent = generatePrintableQuote(quote);
+    printDocument(printComponent, `Quote - ${quote.asset?.name} - ${quote.title}`);
   };
 
   const handleApprove = (status) => {
@@ -395,6 +404,13 @@ export default function Quotes() {
                       </button>
                     </>
                   )}
+                  <button
+                    onClick={() => handlePrintQuote({ preventDefault: () => {}, stopPropagation: () => {} }, selectedQuote)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    <PrinterIcon className="h-5 w-5" />
+                    Print Quote
+                  </button>
                   <button
                     onClick={(e) => handleDelete(e, selectedQuote._id)}
                     disabled={deleteMutation.isLoading}

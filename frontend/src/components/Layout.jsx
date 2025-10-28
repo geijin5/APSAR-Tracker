@@ -11,7 +11,8 @@ import {
   ArrowRightOnRectangleIcon,
   SignalIcon,
   UsersIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
 export default function Layout() {
@@ -31,6 +32,7 @@ export default function Layout() {
     { name: 'Assets', href: '/assets', icon: CubeIcon },
     { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
     { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon },
+    { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
     { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },
     ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: UsersIcon }] : []),

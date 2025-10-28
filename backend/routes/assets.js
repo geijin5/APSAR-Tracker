@@ -178,3 +178,4 @@ router.get('/search/barcode/:barcode', auth, async (req, res) => {
 });
 
 module.exports = router;
+

@@ -1,20 +1,37 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
 import Calendar from '../components/Calendar'
+import Checklist from '../components/Checklist'
+import { printDocument, generatePrintableChecklist } from '../utils/printUtils.jsx'
 import {
   CubeIcon,
   WrenchScrewdriverIcon,
   ClipboardDocumentListIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  PlayIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 export default function Dashboard() {
+  const [selectedChecklist, setSelectedChecklist] = useState(null);
+  const [activeChecklist, setActiveChecklist] = useState([]);
+
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const response = await api.get('/dashboard/stats')
       return response.data
+    }
+  })
+
+  const { data: checklistTemplates } = useQuery({
+    queryKey: ['quickChecklistTemplates'],
+    queryFn: async () => {
+      const response = await api.get('/checklists/templates');
+      // Return most commonly used templates for quick access
+      return response.data?.slice(0, 6) || [];
     }
   })
 
@@ -50,6 +67,34 @@ export default function Dashboard() {
     
     return events;
   }, [stats]);
+
+  const handleStartChecklist = (template) => {
+    const checklistItems = template.items?.map(item => ({
+      item: item.title,
+      completed: false,
+      notes: '',
+      category: item.category,
+      required: item.required,
+      order: item.order,
+      description: item.description
+    })) || [];
+    
+    setActiveChecklist(checklistItems);
+    setSelectedChecklist(template);
+  };
+
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'callout':
+        return 'bg-red-500';
+      case 'maintenance':
+        return 'bg-blue-500';
+      case 'vehicle_inspection':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -179,6 +224,54 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Quick Access Checklists */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Quick Access Checklists</h2>
+          <p className="text-sm text-gray-500">Start common checklists with one click</p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {checklistTemplates && checklistTemplates.length > 0 ? checklistTemplates.map((template) => (
+            <button
+              key={template._id}
+              onClick={() => handleStartChecklist(template)}
+              className="group bg-white rounded-lg shadow-md border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 text-left"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl ${getTypeColor(template.type)} flex items-center justify-center shadow-md`}>
+                  <CheckCircleIcon className="h-6 w-6 text-white" />
+                </div>
+                <PlayIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                {template.name}
+              </h3>
+              
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {template.description}
+              </p>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">
+                  {template.items?.length || 0} items
+                </span>
+                <span className="text-blue-600 font-medium">
+                  Start Checklist →
+                </span>
+              </div>
+            </button>
+          )) : (
+            <div className="col-span-full text-center py-8">
+              <CheckCircleIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No checklists available</h3>
+              <p className="text-gray-500">Checklist templates will appear here once they're loaded.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Calendar Section */}
       <div className="mb-8">
         <Calendar events={calendarEvents} />
@@ -232,6 +325,66 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Active Checklist Modal */}
+      {selectedChecklist && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedChecklist.name}</h2>
+                <p className="text-sm text-gray-600 mt-1">Complete the checklist below</p>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedChecklist(null);
+                  setActiveChecklist([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <Checklist 
+                checklist={activeChecklist}
+                onChecklistChange={setActiveChecklist}
+                showProgress={true}
+                templateData={selectedChecklist}
+              />
+              
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setSelectedChecklist(null);
+                    setActiveChecklist([]);
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const headerInfo = {
+                      'Completed By': 'Field User',
+                      'Date': new Date().toLocaleDateString(),
+                      'Time': new Date().toLocaleTimeString()
+                    };
+                    const printComponent = generatePrintableChecklist(activeChecklist, selectedChecklist, headerInfo);
+                    printDocument(printComponent, `Completed Checklist - ${selectedChecklist.name}`);
+                    setSelectedChecklist(null);
+                    setActiveChecklist([]);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Complete & Print Checklist
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

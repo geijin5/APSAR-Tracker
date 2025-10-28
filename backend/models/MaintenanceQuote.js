@@ -75,3 +75,4 @@ maintenanceQuoteSchema.index({ workOrder: 1 });
 maintenanceQuoteSchema.index({ status: 1 });
 
 module.exports = mongoose.model('MaintenanceQuote', maintenanceQuoteSchema);
+

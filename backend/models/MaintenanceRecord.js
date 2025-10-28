@@ -44,8 +44,25 @@ const maintenanceRecordSchema = new mongoose.Schema({
   checklist: [{
     item: String,
     completed: Boolean,
-    notes: String
+    notes: String,
+    category: {
+      type: String,
+      enum: ['safety', 'operational', 'documentation', 'communication', 'equipment'],
+      default: 'operational'
+    },
+    required: {
+      type: Boolean,
+      default: false
+    },
+    order: {
+      type: Number,
+      default: 0
+    }
   }],
+  checklistTemplate: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ChecklistTemplate'
+  },
   partsUsed: [{
     name: String,
     partNumber: String,
@@ -78,3 +95,4 @@ maintenanceRecordSchema.index({ scheduledDate: 1 });
 maintenanceRecordSchema.index({ completedDate: 1 });
 
 module.exports = mongoose.model('MaintenanceRecord', maintenanceRecordSchema);
+

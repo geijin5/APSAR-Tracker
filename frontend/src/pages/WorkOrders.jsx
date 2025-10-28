@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import { printDocument, generatePrintableWorkOrder } from '../utils/printUtils.jsx';
 
 export default function WorkOrders() {
   const { user } = useAuth();
@@ -86,6 +87,14 @@ export default function WorkOrders() {
     if (window.confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
       deleteMutation.mutate(workOrderId);
     }
+  };
+
+  const handlePrintWorkOrder = (e, workOrder) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const printComponent = generatePrintableWorkOrder(workOrder);
+    printDocument(printComponent, `Work Order - ${workOrder.workOrderNumber} - ${workOrder.title}`);
   };
 
   const handleCategorySubmit = (e) => {
@@ -293,6 +302,13 @@ export default function WorkOrders() {
                         Complete
                       </button>
                     )}
+                    <button
+                      onClick={(e) => handlePrintWorkOrder(e, wo)}
+                      className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                      title="Print work order"
+                    >
+                      <PrinterIcon className="h-5 w-5" />
+                    </button>
                     {user?.role === 'admin' && (
                       <button
                         onClick={(e) => handleDelete(e, wo._id)}
@@ -320,12 +336,21 @@ export default function WorkOrders() {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">{selectedWorkOrder.title}</h2>
-              <button
-                onClick={() => setSelectedWorkOrder(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handlePrintWorkOrder({ preventDefault: () => {}, stopPropagation: () => {} }, selectedWorkOrder)}
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <PrinterIcon className="h-4 w-4 mr-2" />
+                  Print Work Order
+                </button>
+                <button
+                  onClick={() => setSelectedWorkOrder(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
             </div>
             
             <div className="px-6 py-4 space-y-4">

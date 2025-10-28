@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import Checklist from '../components/Checklist';
+import { printDocument, generatePrintableMaintenanceRecord } from '../utils/printUtils.jsx';
 
 export default function Maintenance() {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [checklist, setChecklist] = useState([]);
   const queryClient = useQueryClient();
 
   const { data: records, isLoading } = useQuery({
@@ -22,6 +26,14 @@ export default function Maintenance() {
     queryKey: ['assets'],
     queryFn: async () => {
       const res = await api.get('/assets');
+      return res.data;
+    }
+  });
+
+  const { data: checklistTemplates } = useQuery({
+    queryKey: ['checklistTemplates'],
+    queryFn: async () => {
+      const res = await api.get('/checklists/templates');
       return res.data;
     }
   });
@@ -68,6 +80,14 @@ export default function Maintenance() {
     }
   };
 
+  const handlePrintRecord = (e, record) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const printComponent = generatePrintableMaintenanceRecord(record);
+    printDocument(printComponent, `Maintenance Record - ${record.asset?.name} - ${record.title}`);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -80,9 +100,29 @@ export default function Maintenance() {
       dueDate: formData.get('dueDate'),
       priority: formData.get('priority') || 'medium',
       totalCost: parseFloat(formData.get('totalCost')) || 0,
-      checklist: formData.get('checklist') ? JSON.parse(formData.get('checklist')) : []
+      checklist: checklist,
+      checklistTemplate: selectedTemplate || undefined
     };
     createMutation.mutate(data);
+  };
+
+  const handleTemplateChange = (templateId) => {
+    setSelectedTemplate(templateId);
+    const template = checklistTemplates?.find(t => t._id === templateId);
+    if (template) {
+      const templateItems = template.items.map(item => ({
+        item: item.title,
+        completed: false,
+        notes: '',
+        category: item.category,
+        required: item.required,
+        order: item.order,
+        description: item.description
+      }));
+      setChecklist(templateItems);
+    } else {
+      setChecklist([]);
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -166,6 +206,32 @@ export default function Maintenance() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost ($)</label>
               <input type="number" step="0.01" name="totalCost" className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="0.00" />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Checklist Template (Optional)</label>
+              <select 
+                value={selectedTemplate}
+                onChange={(e) => handleTemplateChange(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              >
+                <option value="">Select a checklist template...</option>
+                {checklistTemplates?.map(template => (
+                  <option key={template._id} value={template._id}>
+                    {template.name} ({template.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {checklist.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Checklist Items</label>
+                <Checklist 
+                  checklist={checklist}
+                  onChecklistChange={setChecklist}
+                  showProgress={true}
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                 Create Record
@@ -232,6 +298,13 @@ export default function Maintenance() {
                         Complete
                       </button>
                     )}
+                    <button
+                      onClick={(e) => handlePrintRecord(e, record)}
+                      className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                      title="Print maintenance record"
+                    >
+                      <PrinterIcon className="h-5 w-5" />
+                    </button>
                     {user?.role === 'admin' && (
                       <button
                         onClick={(e) => handleDelete(e, record._id)}
@@ -259,12 +332,21 @@ export default function Maintenance() {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">{selectedRecord.title}</h2>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handlePrintRecord({ preventDefault: () => {}, stopPropagation: () => {} }, selectedRecord)}
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <PrinterIcon className="h-4 w-4 mr-2" />
+                  Print Record
+                </button>
+                <button
+                  onClick={() => setSelectedRecord(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
             </div>
             
             <div className="px-6 py-4 space-y-4">
@@ -336,6 +418,18 @@ export default function Maintenance() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Notes</h3>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedRecord.notes}</p>
+                </div>
+              )}
+
+              {selectedRecord.checklist && selectedRecord.checklist.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Checklist</h3>
+                  <Checklist 
+                    checklist={selectedRecord.checklist}
+                    readonly={true}
+                    showProgress={true}
+                    templateData={selectedRecord.checklistTemplate}
+                  />
                 </div>
               )}
 
