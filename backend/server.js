@@ -80,8 +80,8 @@ app.get('/api/check-db', async (req, res) => {
   }
 });
 
-// Emergency user creation endpoint (remove after first use)
-app.post('/api/create-admin', async (req, res) => {
+// Emergency user creation endpoint (both GET and POST for convenience)
+const createAdminHandler = async (req, res) => {
   try {
     const User = require('./models/User');
     
@@ -118,7 +118,10 @@ app.post('/api/create-admin', async (req, res) => {
       message: error.message 
     });
   }
-});
+};
+
+app.get('/api/create-admin', createAdminHandler);
+app.post('/api/create-admin', createAdminHandler);
 
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
