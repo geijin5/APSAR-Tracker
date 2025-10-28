@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { printDocument, generatePrintableWorkOrder } from '../utils/printUtils.jsx';
+import { printDocument, generatePrintableWorkOrder } from '../utils/printUtils';
 
 export default function WorkOrders() {
   const { user } = useAuth();

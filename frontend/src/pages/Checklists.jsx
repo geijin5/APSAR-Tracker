@@ -4,7 +4,7 @@ import { PlusIcon, ClipboardDocumentListIcon, EyeIcon, PencilIcon, TrashIcon, XM
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import Checklist from '../components/Checklist';
-import { printDocument, generatePrintableChecklist } from '../utils/printUtils.jsx';
+import { printDocument, generatePrintableChecklist } from '../utils/printUtils';
 
 export default function Checklists() {
   const { user } = useAuth();

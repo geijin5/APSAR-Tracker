@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlusIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { printDocument, generatePrintableQuote } from '../utils/printUtils.jsx';
+import { printDocument, generatePrintableQuote } from '../utils/printUtils';
 
 export default function Quotes() {
   const { user } = useAuth();

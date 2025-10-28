@@ -4,7 +4,7 @@ import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import Checklist from '../components/Checklist';
-import { printDocument, generatePrintableMaintenanceRecord } from '../utils/printUtils.jsx';
+import { printDocument, generatePrintableMaintenanceRecord } from '../utils/printUtils';
 
 export default function Maintenance() {
   const { user } = useAuth();

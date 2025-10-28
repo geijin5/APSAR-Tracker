@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChartBarIcon, DocumentTextIcon, CurrencyDollarIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { printDocument, generatePrintableReport } from '../utils/printUtils.jsx';
+import { printDocument, generatePrintableReport } from '../utils/printUtils';
 
 export default function Reports() {
   const [selectedReport, setSelectedReport] = useState(null);

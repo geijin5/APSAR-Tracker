@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
 import Calendar from '../components/Calendar'
 import Checklist from '../components/Checklist'
-import { printDocument, generatePrintableChecklist } from '../utils/printUtils.jsx'
+import { printDocument, generatePrintableChecklist } from '../utils/printUtils'
 import {
   CubeIcon,
   WrenchScrewdriverIcon,
