@@ -1,0 +1,43 @@
+# Simple Dockerfile optimized for Render deployment
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy root package.json first
+COPY package*.json ./
+
+# Copy package.json files for both frontend and backend
+COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
+
+# Install dependencies for both frontend and backend
+RUN npm install --workspace=frontend --workspace=backend
+
+# Copy source code
+COPY frontend/ ./frontend/
+COPY backend/ ./backend/
+
+# Build frontend
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+WORKDIR /app/frontend
+RUN npm run build
+
+# Switch back to root and move dist to where backend expects it
+WORKDIR /app
+RUN mkdir -p backend/public && cp -r frontend/dist/* backend/public/
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Switch to backend directory for runtime
+WORKDIR /app/backend
+
+# Create uploads directory
+RUN mkdir -p uploads
+
+# Expose port
+EXPOSE 10000
+
+# Start the server
+CMD ["npm", "start"]
