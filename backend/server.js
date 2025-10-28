@@ -66,56 +66,56 @@ app.get('/api/debug', (req, res) => {
   res.json(debugInfo);
 });
 
-// Serve static files from the React build
+// Serve static files from the React build in production
 if (process.env.NODE_ENV === 'production') {
   const fs = require('fs');
   
-  // Try multiple possible paths for the frontend dist
-  const possiblePaths = [
-    path.join(__dirname, '../frontend/dist'),      // Standard path
-    path.join(process.cwd(), 'frontend/dist'),     // From container root
-    path.join(__dirname, '../../frontend/dist'),   // In case of nested structure
-    path.join(process.cwd(), 'dist'),              // Direct dist folder
-    path.join(__dirname, 'public'),                // Public folder in backend
-    path.join(process.cwd(), 'public')             // Public folder in root
-  ];
+  // Based on debug info, we know the frontend is at /app/frontend/dist
+  const frontendPath = path.join(process.cwd(), 'frontend/dist');
+  const indexPath = path.join(frontendPath, 'index.html');
   
-  let frontendPath = null;
-  let indexPath = null;
+  console.log(`🔍 Checking frontend path: ${frontendPath}`);
+  console.log(`🔍 Index file path: ${indexPath}`);
+  console.log(`📁 Frontend exists: ${fs.existsSync(frontendPath)}`);
+  console.log(`📄 Index exists: ${fs.existsSync(indexPath)}`);
   
-  // Find the correct path
-  for (const testPath of possiblePaths) {
-    if (fs.existsSync(testPath) && fs.existsSync(path.join(testPath, 'index.html'))) {
-      frontendPath = testPath;
-      indexPath = path.join(testPath, 'index.html');
-      console.log(`✅ Frontend found at: ${frontendPath}`);
-      break;
-    }
-  }
-  
-  if (frontendPath && indexPath) {
-    // Serve static files from frontend build
-    app.use(express.static(frontendPath));
+  if (fs.existsSync(frontendPath) && fs.existsSync(indexPath)) {
+    console.log(`✅ Setting up static file serving from: ${frontendPath}`);
+    
+    // Serve static files from frontend build  
+    app.use(express.static(frontendPath, {
+      maxAge: '1d', // Cache static assets for 1 day
+      index: false  // Don't automatically serve index.html for directory requests
+    }));
     
     // Handle React routing - send all non-API requests to index.html
     app.get('*', (req, res) => {
-      res.sendFile(indexPath);
+      console.log(`📝 Serving index.html for route: ${req.path}`);
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error('❌ Error serving index.html:', err);
+          res.status(500).send('Error loading application');
+        }
+      });
     });
+    
+    console.log(`🚀 Frontend serving configured successfully`);
   } else {
-    console.log('❌ Frontend dist not found in any of the expected paths');
-    // Fallback route
+    console.log('❌ Frontend files not found, serving error page');
     app.get('*', (req, res) => {
       res.status(404).send(`
-        <h1>Frontend Not Found</h1>
-        <p>The frontend build files could not be located.</p>
-        <p>Please check the build process and file paths.</p>
+        <h1>Frontend Build Not Found</h1>
+        <p>Expected location: ${frontendPath}</p>
+        <p>Index file: ${indexPath}</p>
+        <p>Frontend exists: ${fs.existsSync(frontendPath)}</p>
+        <p>Index exists: ${fs.existsSync(indexPath)}</p>
         <p><a href="/api/debug">View Debug Info</a></p>
         <p><a href="/api/health">API Health Check</a></p>
       `);
     });
   }
 } else {
-  // Development mode - show message
+  // Development mode
   app.get('*', (req, res) => {
     res.send(`
       <h1>APSAR Tracker - Development Mode</h1>
