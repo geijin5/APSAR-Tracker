@@ -7,6 +7,8 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
+# Increase Node.js memory limit for large builds
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # Backend build stage  
