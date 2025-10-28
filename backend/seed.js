@@ -4,6 +4,7 @@ const User = require('./models/User');
 const Asset = require('./models/Asset');
 const Category = require('./models/Category');
 const ChecklistTemplate = require('./models/ChecklistTemplate');
+const Appointment = require('./models/Appointment');
 require('dotenv').config();
 
 const seedDatabase = async () => {
@@ -17,12 +18,14 @@ const seedDatabase = async () => {
     await Asset.deleteMany({});
     await Category.deleteMany({});
     await ChecklistTemplate.deleteMany({});
+    await Appointment.deleteMany({});
     console.log('Cleared existing data');
 
     // Create users - using save() to trigger password hashing
     const adminUser = new User({
       firstName: 'Admin',
       lastName: 'User',
+      username: 'admin',
       email: 'admin@apsar.org',
       password: 'password123',
       role: 'admin',
@@ -33,6 +36,7 @@ const seedDatabase = async () => {
     const techUser = new User({
       firstName: 'John',
       lastName: 'Technician',
+      username: 'tech',
       email: 'tech@apsar.org',
       password: 'password123',
       role: 'technician',
@@ -43,6 +47,7 @@ const seedDatabase = async () => {
     const operatorUser = new User({
       firstName: 'Sarah',
       lastName: 'Operator',
+      username: 'operator',
       email: 'operator@apsar.org',
       password: 'password123',
       role: 'operator',
@@ -53,6 +58,7 @@ const seedDatabase = async () => {
     const viewerUser = new User({
       firstName: 'Mike',
       lastName: 'Viewer',
+      username: 'viewer',
       email: 'viewer@apsar.org',
       password: 'password123',
       role: 'viewer',
@@ -329,13 +335,118 @@ const seedDatabase = async () => {
     ]);
     console.log('Created checklist templates');
 
+    // Create sample appointments
+    const today = new Date();
+    const appointments = await Appointment.insertMany([
+      {
+        title: 'Monthly Team Meeting',
+        description: 'Regular monthly meeting to discuss operations and upcoming missions',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 10, 0), // 3 days from now at 10:00 AM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 11, 30), // Same day at 11:30 AM
+        location: 'Conference Room A',
+        type: 'meeting',
+        priority: 'medium',
+        status: 'scheduled',
+        attendees: [
+          { user: adminUser._id, status: 'accepted' },
+          { user: operatorUser._id, status: 'invited' },
+          { user: techUser._id, status: 'invited' }
+        ],
+        createdBy: adminUser._id,
+        tags: ['operations', 'monthly']
+      },
+      {
+        title: 'Equipment Maintenance Training',
+        description: 'Training session on new maintenance procedures for rescue equipment',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 9, 0), // 1 week from now at 9:00 AM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 17, 0), // Same day at 5:00 PM
+        allDay: false,
+        location: 'Training Center',
+        type: 'training',
+        priority: 'high',
+        status: 'confirmed',
+        attendees: [
+          { user: techUser._id, status: 'accepted' },
+          { user: operatorUser._id, status: 'accepted' }
+        ],
+        createdBy: adminUser._id,
+        tags: ['training', 'maintenance', 'equipment']
+      },
+      {
+        title: 'Vehicle Inspection',
+        description: 'Annual safety inspection for rescue vehicle fleet',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5, 8, 0), // 5 days from now at 8:00 AM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5, 16, 0), // Same day at 4:00 PM
+        location: 'Vehicle Bay',
+        type: 'inspection',
+        priority: 'urgent',
+        status: 'scheduled',
+        relatedAsset: assets[0]._id, // Reference the search and rescue vehicle
+        attendees: [
+          { user: techUser._id, status: 'accepted' }
+        ],
+        createdBy: operatorUser._id,
+        tags: ['inspection', 'vehicles', 'annual']
+      },
+      {
+        title: 'Community Safety Event',
+        description: 'Public awareness event about search and rescue operations',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14, 10, 0), // 2 weeks from now at 10:00 AM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14, 15, 0), // Same day at 3:00 PM
+        location: 'Community Center',
+        type: 'event',
+        priority: 'medium',
+        status: 'scheduled',
+        attendees: [
+          { user: adminUser._id, status: 'accepted' },
+          { user: operatorUser._id, status: 'accepted' },
+          { user: viewerUser._id, status: 'tentative' }
+        ],
+        createdBy: adminUser._id,
+        tags: ['community', 'outreach', 'public']
+      },
+      {
+        title: 'Quarterly Equipment Review',
+        description: 'Review and assessment of all rescue equipment condition and needs',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10, 13, 0), // 10 days from now at 1:00 PM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10, 16, 0), // Same day at 4:00 PM
+        location: 'Equipment Storage',
+        type: 'inspection',
+        priority: 'medium',
+        status: 'scheduled',
+        attendees: [
+          { user: techUser._id, status: 'accepted' },
+          { user: adminUser._id, status: 'invited' }
+        ],
+        createdBy: techUser._id,
+        tags: ['equipment', 'quarterly', 'review']
+      },
+      {
+        title: 'Medical Equipment Calibration',
+        description: 'Scheduled calibration and testing of medical response equipment',
+        startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 21, 9, 0), // 3 weeks from now at 9:00 AM
+        endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 21, 12, 0), // Same day at 12:00 PM
+        location: 'Medical Bay',
+        type: 'maintenance',
+        priority: 'high',
+        status: 'scheduled',
+        relatedAsset: assets[1]._id, // Reference the medical kit
+        attendees: [
+          { user: techUser._id, status: 'accepted' }
+        ],
+        createdBy: adminUser._id,
+        tags: ['medical', 'calibration', 'maintenance']
+      }
+    ]);
+    console.log('Created sample appointments');
+
     console.log('\n✅ Database seeded successfully!');
-    console.log('\nTest Credentials:');
-    console.log('==================');
-    console.log('Admin:     admin@apsar.org / password123');
-    console.log('Technician: tech@apsar.org / password123');
-    console.log('Operator:   operator@apsar.org / password123');
-    console.log('Viewer:     viewer@apsar.org / password123');
+    console.log('\nTest Credentials (Username / Password):');
+    console.log('======================================');
+    console.log('Admin:      admin / password123');
+    console.log('Technician: tech / password123');
+    console.log('Operator:   operator / password123');
+    console.log('Viewer:     viewer / password123');
     console.log('\n');
 
     process.exit(0);

@@ -3,6 +3,7 @@ const router = express.Router();
 const Asset = require('../models/Asset');
 const MaintenanceRecord = require('../models/MaintenanceRecord');
 const WorkOrder = require('../models/WorkOrder');
+const Appointment = require('../models/Appointment');
 const { auth } = require('../middleware/auth');
 
 // @route   GET /api/dashboard/stats
@@ -107,6 +108,21 @@ router.get('/stats', auth, async (req, res) => {
       .populate('asset', 'name')
       .select('scheduledStartDate title asset');
 
+    const calendarAppointments = await Appointment.find({
+      $or: [
+        {
+          startDate: { $gte: calendarStart, $lte: calendarEnd }
+        },
+        {
+          endDate: { $gte: calendarStart, $lte: calendarEnd }
+        }
+      ],
+      status: { $in: ['scheduled', 'confirmed', 'in_progress'] }
+    })
+      .populate('createdBy', 'firstName lastName')
+      .populate('relatedAsset', 'name')
+      .select('startDate endDate title type priority location relatedAsset createdBy');
+
     res.json({
       assets: {
         total: totalAssets,
@@ -131,7 +147,8 @@ router.get('/stats', auth, async (req, res) => {
       recentActivity: recentMaintenance,
       calendar: {
         maintenance: calendarMaintenance,
-        workOrders: calendarWorkOrders
+        workOrders: calendarWorkOrders,
+        appointments: calendarAppointments
       }
     });
   } catch (err) {

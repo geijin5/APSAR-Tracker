@@ -12,7 +12,8 @@ import {
   SignalIcon,
   UsersIcon,
   DocumentTextIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline'
 
 export default function Layout() {
@@ -32,6 +33,7 @@ export default function Layout() {
     { name: 'Assets', href: '/assets', icon: CubeIcon },
     { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
     { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon },
+    { name: 'Appointments', href: '/appointments', icon: CalendarIcon },
     { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
     { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },

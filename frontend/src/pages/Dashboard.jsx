@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
 import Calendar from '../components/Calendar'
 import Checklist from '../components/Checklist'
@@ -17,6 +17,10 @@ import {
 export default function Dashboard() {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [activeChecklist, setActiveChecklist] = useState([]);
+  const [showCreateAppointment, setShowCreateAppointment] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const queryClient = useQueryClient();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -34,6 +38,28 @@ export default function Dashboard() {
       return response.data?.slice(0, 6) || [];
     }
   })
+
+  // Appointment mutations
+  const createAppointmentMutation = useMutation({
+    mutationFn: async (appointmentData) => {
+      const response = await api.post('/appointments', appointmentData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['dashboard-stats']);
+      setShowCreateAppointment(false);
+      setSelectedDate(null);
+    }
+  });
+
+  const deleteAppointmentMutation = useMutation({
+    mutationFn: async (appointmentId) => {
+      await api.delete(`/appointments/${appointmentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['dashboard-stats']);
+    }
+  });
 
   // Transform calendar data for the Calendar component
   const calendarEvents = useMemo(() => {
@@ -63,10 +89,87 @@ export default function Dashboard() {
       }
     });
     
+    // Add appointment events
+    stats.calendar.appointments?.forEach(item => {
+      if (item.startDate) {
+        events.push({
+          _id: item._id,
+          date: new Date(item.startDate),
+          startDate: item.startDate,
+          endDate: item.endDate,
+          title: item.title,
+          description: item.description,
+          location: item.location,
+          type: item.type,
+          priority: item.priority,
+          status: item.status,
+          attendees: item.attendees,
+          color: item.type === 'meeting' ? 'bg-blue-100 text-blue-800 border-blue-400' :
+                 item.type === 'training' ? 'bg-green-100 text-green-800 border-green-400' :
+                 item.type === 'inspection' ? 'bg-purple-100 text-purple-800 border-purple-400' :
+                 item.type === 'maintenance' ? 'bg-orange-100 text-orange-800 border-orange-400' :
+                 item.type === 'event' ? 'bg-pink-100 text-pink-800 border-pink-400' :
+                 'bg-gray-100 text-gray-800 border-gray-400'
+        });
+      }
+    });
+    
     console.log('Calendar events:', events);
     
     return events;
   }, [stats]);
+
+  // Calendar event handlers
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    setShowCreateAppointment(true);
+  };
+
+  const handleEventClick = (event) => {
+    // Event details are handled within the Calendar component
+    console.log('Event clicked:', event);
+  };
+
+  const handleDeleteEvent = async (event) => {
+    if (event._id) {
+      deleteAppointmentMutation.mutate(event._id);
+    }
+  };
+
+  const handleCreateAppointment = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const startDateTime = new Date(selectedDate);
+    const endDateTime = new Date(selectedDate);
+    
+    // Set times from form
+    const startTime = formData.get('startTime');
+    const endTime = formData.get('endTime');
+    
+    if (startTime) {
+      const [hours, minutes] = startTime.split(':');
+      startDateTime.setHours(parseInt(hours), parseInt(minutes));
+    }
+    
+    if (endTime) {
+      const [hours, minutes] = endTime.split(':');
+      endDateTime.setHours(parseInt(hours), parseInt(minutes));
+    }
+
+    const appointmentData = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      startDate: startDateTime.toISOString(),
+      endDate: endDateTime.toISOString(),
+      location: formData.get('location'),
+      type: formData.get('type') || 'meeting',
+      priority: formData.get('priority') || 'medium',
+      allDay: formData.has('allDay')
+    };
+
+    createAppointmentMutation.mutate(appointmentData);
+  };
 
   const handleStartChecklist = (template) => {
     const checklistItems = template.items?.map(item => ({
@@ -274,7 +377,13 @@ export default function Dashboard() {
 
       {/* Calendar Section */}
       <div className="mb-8">
-        <Calendar events={calendarEvents} />
+        <Calendar 
+          events={calendarEvents} 
+          onEventClick={handleEventClick}
+          onDateClick={handleDateClick}
+          onDeleteEvent={handleDeleteEvent}
+          canEdit={true}
+        />
       </div>
 
       {/* Recent Activity */}
@@ -382,6 +491,140 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Appointment Modal */}
+      {showCreateAppointment && selectedDate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleCreateAppointment}>
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">
+                  New Appointment - {selectedDate.toLocaleDateString()}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAppointment(false);
+                    setSelectedDate(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    className="input"
+                    placeholder="Enter appointment title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="input"
+                    placeholder="Enter appointment description"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      className="input"
+                      defaultValue="09:00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      className="input"
+                      defaultValue="10:00"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                  <input
+                    type="text"
+                    name="location"
+                    className="input"
+                    placeholder="Enter location"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select name="type" className="input">
+                      <option value="meeting">Meeting</option>
+                      <option value="training">Training</option>
+                      <option value="inspection">Inspection</option>
+                      <option value="maintenance">Maintenance</option>
+                      <option value="event">Event</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select name="priority" className="input">
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="allDay"
+                    id="allDay"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="allDay" className="ml-2 block text-sm text-gray-900">
+                    All day appointment
+                  </label>
+                </div>
+              </div>
+              
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAppointment(false);
+                    setSelectedDate(null);
+                  }}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createAppointmentMutation.isLoading}
+                  className="btn-primary"
+                >
+                  {createAppointmentMutation.isLoading ? 'Creating...' : 'Create Appointment'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

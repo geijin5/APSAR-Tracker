@@ -17,7 +17,8 @@ const generateToken = (userId) => {
 router.post('/register', [
   body('firstName').notEmpty().trim(),
   body('lastName').notEmpty().trim(),
-  body('email').isEmail().normalizeEmail(),
+  body('username').isLength({ min: 3, max: 20 }).trim(),
+  body('email').optional().isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
 ], async (req, res) => {
   try {
@@ -26,10 +27,10 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, role, unit } = req.body;
+    const { firstName, lastName, username, email, password, role, unit } = req.body;
 
     // Check if user already exists
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ username });
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
     }
@@ -38,6 +39,7 @@ router.post('/register', [
     user = new User({
       firstName,
       lastName,
+      username,
       email,
       password,
       role: role || 'viewer',
@@ -54,6 +56,7 @@ router.post('/register', [
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: user.username,
         email: user.email,
         role: user.role,
         unit: user.unit
@@ -69,7 +72,7 @@ router.post('/register', [
 // @desc    Login user
 // @access  Public
 router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
+  body('username').isLength({ min: 3, max: 20 }).trim(),
   body('password').exists(),
 ], async (req, res) => {
   try {
@@ -78,10 +81,13 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { username, password } = req.body;
+
+    console.log('Login attempt:', { username, hasPassword: !!password });
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
+    console.log('User found:', user ? 'Yes' : 'No');
     if (!user) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
@@ -93,6 +99,7 @@ router.post('/login', [
 
     // Validate password
     const isMatch = await user.comparePassword(password);
+    console.log('Password match:', isMatch ? 'Yes' : 'No');
     if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
@@ -105,6 +112,7 @@ router.post('/login', [
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: user.username,
         email: user.email,
         role: user.role,
         unit: user.unit
