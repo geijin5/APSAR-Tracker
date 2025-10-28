@@ -83,11 +83,8 @@ router.post('/login', [
 
     const { username, password } = req.body;
 
-    console.log('Login attempt:', { username, hasPassword: !!password });
-
     // Check if user exists
     const user = await User.findOne({ username });
-    console.log('User found:', user ? 'Yes' : 'No');
     if (!user) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
@@ -99,7 +96,6 @@ router.post('/login', [
 
     // Validate password
     const isMatch = await user.comparePassword(password);
-    console.log('Password match:', isMatch ? 'Yes' : 'No');
     if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }

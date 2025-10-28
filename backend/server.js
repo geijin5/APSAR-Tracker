@@ -36,6 +36,50 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'APSAR Tracker API is running' });
 });
 
+// Database and auth check endpoint
+app.get('/api/check-db', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    
+    const dbStatus = {
+      mongoConnected: mongoose.connection.readyState === 1,
+      mongoState: mongoose.connection.readyState,
+      dbName: mongoose.connection.name,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      jwtSecretLength: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0
+    };
+    
+    // Try to count users
+    try {
+      dbStatus.userCount = await User.countDocuments();
+      dbStatus.hasUsers = dbStatus.userCount > 0;
+      
+      // Check if admin user exists
+      const adminUser = await User.findOne({ username: 'admin' });
+      dbStatus.hasAdminUser = !!adminUser;
+      
+      if (adminUser) {
+        dbStatus.adminUserInfo = {
+          id: adminUser._id,
+          username: adminUser.username,
+          role: adminUser.role,
+          isActive: adminUser.isActive,
+          hasPassword: !!adminUser.password
+        };
+      }
+    } catch (dbError) {
+      dbStatus.dbError = dbError.message;
+    }
+    
+    res.json(dbStatus);
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Database check failed', 
+      message: error.message 
+    });
+  }
+});
+
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
   const fs = require('fs');
