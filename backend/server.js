@@ -80,6 +80,46 @@ app.get('/api/check-db', async (req, res) => {
   }
 });
 
+// Emergency user creation endpoint (remove after first use)
+app.post('/api/create-admin', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ username: 'admin' });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Admin user already exists' });
+    }
+    
+    // Create admin user
+    const adminUser = new User({
+      firstName: 'Admin',
+      lastName: 'User',
+      username: 'admin',
+      email: 'admin@apsar.org',
+      password: 'password123',
+      role: 'admin',
+      unit: 'Command',
+      isActive: true
+    });
+    
+    await adminUser.save();
+    
+    res.json({ 
+      message: 'Admin user created successfully',
+      username: 'admin',
+      password: 'password123',
+      note: 'Please change the password after first login'
+    });
+    
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to create admin user',
+      message: error.message 
+    });
+  }
+});
+
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
   const fs = require('fs');
