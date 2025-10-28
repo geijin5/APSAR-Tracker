@@ -5,7 +5,7 @@ FROM node:18-alpine AS base
 FROM base AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 COPY frontend/ ./
 RUN npm run build
 
@@ -13,7 +13,7 @@ RUN npm run build
 FROM base AS backend-build
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 COPY backend/ ./
 
 # Production stage

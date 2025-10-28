@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: apsar-tracker
+    env: node
+    plan: free
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: apsar-mongodb
+    plan: free
