@@ -5,7 +5,7 @@ FROM node:18-alpine AS base
 FROM base AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install --omit=dev
+RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
