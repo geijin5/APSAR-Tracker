@@ -21,7 +21,7 @@ const seedDatabase = async () => {
     await Appointment.deleteMany({});
     console.log('Cleared existing data');
 
-    // Create users - using save() to trigger password hashing
+    // Create admin user only - no test users
     const adminUser = new User({
       firstName: 'Admin',
       lastName: 'User',
@@ -31,35 +31,7 @@ const seedDatabase = async () => {
     });
     await adminUser.save();
 
-    const techUser = new User({
-      firstName: 'John',
-      lastName: 'Technician',
-      username: 'tech',
-      password: 'password123',
-      role: 'technician'
-    });
-    await techUser.save();
-
-    const operatorUser = new User({
-      firstName: 'Sarah',
-      lastName: 'Operator',
-      username: 'operator',
-      password: 'password123',
-      role: 'operator'
-    });
-    await operatorUser.save();
-
-    const viewerUser = new User({
-      firstName: 'Mike',
-      lastName: 'Viewer',
-      username: 'viewer',
-      password: 'password123',
-      role: 'viewer'
-    });
-    await viewerUser.save();
-
-    const users = [adminUser, techUser, operatorUser, viewerUser];
-    console.log('Created users');
+    console.log('Created admin user');
 
     // Create default categories for work orders
     const categories = await Category.insertMany([
@@ -433,12 +405,9 @@ const seedDatabase = async () => {
     console.log('Created sample appointments');
 
     console.log('\n✅ Database seeded successfully!');
-    console.log('\nTest Credentials (Username / Password):');
-    console.log('======================================');
-    console.log('Admin:      myusername / mypassword123');  // ← Updated credentials
-    console.log('Technician: tech / password123');
-    console.log('Operator:   operator / password123');
-    console.log('Viewer:     viewer / password123');
+    console.log('\nAdmin Credentials (Username / Password):');
+    console.log('=======================================');
+    console.log('Admin:      myusername / mypassword123');
     console.log('\n');
 
     process.exit(0);

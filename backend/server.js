@@ -210,6 +210,55 @@ app.get('/api/fix-db-indexes', async (req, res) => {
   }
 });
 
+// Remove test users (keep only admin)
+app.get('/api/clean-test-users', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    
+    // Find test users (exclude the custom admin)
+    const testUsers = await User.find({ 
+      username: { $in: ['tech', 'operator', 'viewer'] }
+    });
+    
+    let results = {
+      message: 'Test user cleanup completed',
+      actions: [],
+      removedUsers: []
+    };
+    
+    if (testUsers.length > 0) {
+      for (const testUser of testUsers) {
+        results.removedUsers.push({
+          username: testUser.username,
+          role: testUser.role,
+          name: `${testUser.firstName} ${testUser.lastName}`
+        });
+      }
+      
+      // Delete test users
+      await User.deleteMany({ 
+        username: { $in: ['tech', 'operator', 'viewer'] }
+      });
+      
+      results.actions.push(`Removed ${testUsers.length} test users`);
+      console.log(`✅ Removed ${testUsers.length} test users:`, results.removedUsers);
+    } else {
+      results.actions.push('No test users found to remove');
+    }
+    
+    // Get remaining user count
+    const remainingUsers = await User.countDocuments();
+    results.remainingUserCount = remainingUsers;
+    
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to clean test users',
+      message: error.message 
+    });
+  }
+});
+
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
   const fs = require('fs');
