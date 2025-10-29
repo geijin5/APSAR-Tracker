@@ -10,6 +10,7 @@ export default function WorkOrders() {
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
   const [createdByName, setCreatedByName] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState({
     date: '',
@@ -27,8 +28,24 @@ export default function WorkOrders() {
       });
       // Reset name field when form opens
       setCreatedByName('');
+      setSelectedTemplate('');
     }
   }, [showForm]);
+
+  const handleTemplateChange = (templateId) => {
+    setSelectedTemplate(templateId);
+    const template = workOrderTemplates?.find(t => t._id === templateId);
+    if (template) {
+      // Auto-fill form fields from template
+      const form = document.querySelector('form[data-work-order-form]');
+      if (form) {
+        form.title.value = template.name;
+        form.description.value = template.description || '';
+        form.priority.value = template.priority || 'medium';
+        form.category.value = template.category || '';
+      }
+    }
+  };
 
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ['workorders'],
@@ -50,6 +67,14 @@ export default function WorkOrders() {
     queryKey: ['categories', 'workorder'],
     queryFn: async () => {
       const res = await api.get('/categories?type=workorder');
+      return res.data;
+    }
+  });
+
+  const { data: workOrderTemplates } = useQuery({
+    queryKey: ['workOrderTemplates'],
+    queryFn: async () => {
+      const res = await api.get('/work-order-templates');
       return res.data;
     }
   });
@@ -171,7 +196,27 @@ export default function WorkOrders() {
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <h2 className="text-xl font-semibold mb-4">Create Work Order</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} data-work-order-form className="space-y-4">
+            {/* Template Selection */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-3">Quick Start with Template (Optional)</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Work Order Template</label>
+                <select 
+                  value={selectedTemplate}
+                  onChange={(e) => handleTemplateChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Choose a template to auto-fill...</option>
+                  {workOrderTemplates?.map(template => (
+                    <option key={template._id} value={template._id}>
+                      {template.name} ({template.category})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Asset</label>

@@ -11,6 +11,7 @@ export default function Maintenance() {
   const [showForm, setShowForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [selectedMaintenanceTemplate, setSelectedMaintenanceTemplate] = useState('');
   const [checklist, setChecklist] = useState([]);
   const [createdByName, setCreatedByName] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState({
@@ -29,8 +30,29 @@ export default function Maintenance() {
       });
       // Reset name field when form opens
       setCreatedByName('');
+      setSelectedMaintenanceTemplate('');
     }
   }, [showForm]);
+
+  const handleMaintenanceTemplateChange = (templateId) => {
+    setSelectedMaintenanceTemplate(templateId);
+    const template = maintenanceTemplates?.find(t => t._id === templateId);
+    if (template) {
+      // Auto-fill form fields from template
+      const form = document.querySelector('form[data-maintenance-form]');
+      if (form) {
+        form.type.value = template.type;
+        form.title.value = template.name;
+        form.description.value = template.description || '';
+        form.priority.value = template.priority || 'medium';
+      }
+      
+      // Auto-select associated checklist template if available
+      if (template.checklistTemplate) {
+        setSelectedTemplate(template.checklistTemplate._id || template.checklistTemplate);
+      }
+    }
+  };
 
   const { data: records, isLoading } = useQuery({
     queryKey: ['maintenance'],
@@ -52,6 +74,14 @@ export default function Maintenance() {
     queryKey: ['checklistTemplates'],
     queryFn: async () => {
       const res = await api.get('/checklists/templates');
+      return res.data;
+    }
+  });
+
+  const { data: maintenanceTemplates } = useQuery({
+    queryKey: ['maintenanceTemplates'],
+    queryFn: async () => {
+      const res = await api.get('/maintenance-templates');
       return res.data;
     }
   });
@@ -173,7 +203,27 @@ export default function Maintenance() {
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <h2 className="text-xl font-semibold mb-4">Create Maintenance Record</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} data-maintenance-form className="space-y-4">
+            {/* Template Selection */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-3">Quick Start with Template (Optional)</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Maintenance Template</label>
+                <select 
+                  value={selectedMaintenanceTemplate}
+                  onChange={(e) => handleMaintenanceTemplateChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Choose a template to auto-fill...</option>
+                  {maintenanceTemplates?.map(template => (
+                    <option key={template._id} value={template._id}>
+                      {template.name} ({template.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Asset</label>
