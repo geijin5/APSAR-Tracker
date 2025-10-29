@@ -27,8 +27,7 @@ const seedDatabase = async () => {
       lastName: 'User',
       username: 'myusername',        // ← Your custom username
       password: 'mypassword123',     // ← Your custom password
-      role: 'admin',
-      unit: 'Command'
+      role: 'admin'
     });
     await adminUser.save();
 
@@ -37,8 +36,7 @@ const seedDatabase = async () => {
       lastName: 'Technician',
       username: 'tech',
       password: 'password123',
-      role: 'technician',
-      unit: 'Technical'
+      role: 'technician'
     });
     await techUser.save();
 
@@ -47,8 +45,7 @@ const seedDatabase = async () => {
       lastName: 'Operator',
       username: 'operator',
       password: 'password123',
-      role: 'operator',
-      unit: 'Operations'
+      role: 'operator'
     });
     await operatorUser.save();
 
@@ -57,8 +54,7 @@ const seedDatabase = async () => {
       lastName: 'Viewer',
       username: 'viewer',
       password: 'password123',
-      role: 'viewer',
-      unit: 'General'
+      role: 'viewer'
     });
     await viewerUser.save();
 

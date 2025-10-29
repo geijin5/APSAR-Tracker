@@ -58,8 +58,7 @@ export default function Users() {
       lastName: formData.get('lastName'),
       username: formData.get('username'),
       password: formData.get('password'),
-      role: formData.get('role'),
-      unit: formData.get('unit')
+      role: formData.get('role')
     };
     createMutation.mutate(data);
   };
@@ -109,20 +108,14 @@ export default function Users() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input type="password" name="password" required minLength={6} className="input" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select name="role" required className="input">
-                  <option value="viewer">Viewer</option>
-                  <option value="operator">Operator</option>
-                  <option value="technician">Technician</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-                <input type="text" name="unit" className="input" />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <select name="role" required className="input">
+                <option value="viewer">Viewer</option>
+                <option value="operator">Operator</option>
+                <option value="technician">Technician</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
             <div className="flex gap-3">
               <button type="submit" className="btn-primary">
@@ -144,7 +137,6 @@ export default function Users() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -166,7 +158,6 @@ export default function Users() {
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.unit || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => handleDelete(u._id, `${u.firstName} ${u.lastName}`)}

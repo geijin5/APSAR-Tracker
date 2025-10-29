@@ -98,7 +98,6 @@ const createAdminHandler = async (req, res) => {
       username: 'myusername',        // ← Your custom username
       password: 'mypassword123',     // ← Your custom password
       role: 'admin',
-      unit: 'Command',
       isActive: true
     });
     

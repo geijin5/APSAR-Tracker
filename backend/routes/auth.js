@@ -19,8 +19,7 @@ router.post('/register', [
   body('lastName').notEmpty().trim().withMessage('Last name is required'),
   body('username').isLength({ min: 3, max: 20 }).trim().withMessage('Username must be 3-20 characters'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role'),
-  body('unit').optional().trim()
+  body('role').isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role')
 ], async (req, res) => {
   try {
     // Debug: Log the received data
@@ -32,7 +31,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, username, password, role, unit } = req.body;
+    const { firstName, lastName, username, password, role } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ username });
@@ -46,8 +45,7 @@ router.post('/register', [
       lastName,
       username,
       password,
-      role: role || 'viewer',
-      unit
+      role: role || 'viewer'
     });
 
     await user.save();
@@ -61,8 +59,7 @@ router.post('/register', [
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        role: user.role,
-        unit: user.unit
+        role: user.role
       }
     });
   } catch (err) {
@@ -112,8 +109,7 @@ router.post('/login', [
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        role: user.role,
-        unit: user.unit
+        role: user.role
       }
     });
   } catch (err) {

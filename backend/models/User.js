@@ -31,10 +31,6 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'technician', 'operator', 'viewer'],
     default: 'viewer'
   },
-  unit: {
-    type: String,
-    trim: true
-  },
   certifications: [{
     name: String,
     issuedDate: Date,
