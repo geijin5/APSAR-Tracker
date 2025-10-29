@@ -168,6 +168,48 @@ app.get('/api/find-admin', async (req, res) => {
   }
 });
 
+// Fix database indexes (remove old email index)
+app.get('/api/fix-db-indexes', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    
+    // Get current indexes
+    const indexes = await User.collection.getIndexes();
+    console.log('Current indexes:', Object.keys(indexes));
+    
+    let results = {
+      message: 'Database index fix completed',
+      indexes: Object.keys(indexes),
+      actions: []
+    };
+    
+    // Drop email index if it exists
+    if (indexes.email_1) {
+      try {
+        await User.collection.dropIndex('email_1');
+        results.actions.push('Dropped email_1 index');
+        console.log('✅ Dropped email_1 index');
+      } catch (dropError) {
+        results.actions.push(`Failed to drop email_1 index: ${dropError.message}`);
+        console.log('❌ Failed to drop email_1 index:', dropError.message);
+      }
+    } else {
+      results.actions.push('email_1 index not found (already removed)');
+    }
+    
+    // Get indexes after cleanup
+    const newIndexes = await User.collection.getIndexes();
+    results.indexesAfter = Object.keys(newIndexes);
+    
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to fix database indexes',
+      message: error.message 
+    });
+  }
+});
+
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
   const fs = require('fs');
