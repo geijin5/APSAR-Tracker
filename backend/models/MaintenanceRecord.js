@@ -37,6 +37,10 @@ const maintenanceRecordSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  createdByName: {
+    type: String,
+    trim: true
+  },
   workOrder: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'WorkOrder'

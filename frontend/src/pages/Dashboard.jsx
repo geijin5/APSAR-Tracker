@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 import Calendar from '../components/Calendar'
 import Checklist from '../components/Checklist'
@@ -15,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [activeChecklist, setActiveChecklist] = useState([]);
   const [showCreateAppointment, setShowCreateAppointment] = useState(false);
@@ -22,7 +24,7 @@ export default function Dashboard() {
   const [isAllDay, setIsAllDay] = useState(false);
   const [checklistCompletion, setChecklistCompletion] = useState(null);
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient();</thinking>
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -165,7 +167,8 @@ export default function Dashboard() {
       location: formData.get('location'),
       type: formData.get('type') || 'meeting',
       priority: formData.get('priority') || 'medium',
-      allDay: isAllDay
+      allDay: isAllDay,
+      ...(user?.role === 'viewer' && { createdByName: formData.get('createdByName') })
     };
 
     // Only add endDate for non-all-day appointments
@@ -610,6 +613,20 @@ export default function Dashboard() {
                     placeholder="Enter location"
                   />
                 </div>
+
+                {/* Name field for viewer users */}
+                {user?.role === 'viewer' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                    <input
+                      type="text"
+                      name="createdByName"
+                      required
+                      className="input"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

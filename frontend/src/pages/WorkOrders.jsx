@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,7 +10,25 @@ export default function WorkOrders() {
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
+  const [createdByName, setCreatedByName] = useState('');
+  const [currentDateTime, setCurrentDateTime] = useState({
+    date: '',
+    time: ''
+  });
   const queryClient = useQueryClient();
+
+  // Auto-fill current date and time when form opens
+  useEffect(() => {
+    if (showForm) {
+      const now = new Date();
+      setCurrentDateTime({
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString()
+      });
+      // Reset name field when form opens
+      setCreatedByName('');
+    }
+  }, [showForm]);
 
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ['workorders'],
@@ -118,7 +136,8 @@ export default function WorkOrders() {
       priority: formData.get('priority') || 'medium',
       category: formData.get('category'),
       scheduledStartDate: formData.get('scheduledStartDate'),
-      scheduledEndDate: formData.get('scheduledEndDate')
+      scheduledEndDate: formData.get('scheduledEndDate'),
+      ...(user?.role === 'viewer' && { createdByName: formData.get('createdByName') })
     };
     createMutation.mutate(data);
   };
@@ -195,6 +214,46 @@ export default function WorkOrders() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea name="description" rows="3" required className="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
             </div>
+
+            {/* Name field and auto-fill date/time for viewer users */}
+            {user?.role === 'viewer' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-blue-900 mb-3">Creator Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                    <input 
+                      type="text" 
+                      name="createdByName" 
+                      required
+                      value={createdByName}
+                      onChange={(e) => setCreatedByName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Created</label>
+                    <input 
+                      type="text" 
+                      value={currentDateTime.date}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time Created</label>
+                    <input 
+                      type="text" 
+                      value={currentDateTime.time}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Scheduled Start</label>

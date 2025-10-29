@@ -94,13 +94,12 @@ router.get('/:id', auth, async (req, res) => {
 
 // @route   POST /api/appointments
 // @desc    Create new appointment
-// @access  Private - Admin, Operator, Technician
+// @access  Private - all authenticated users
 router.post('/', [
   auth,
-  authorize(['admin', 'operator', 'technician']),
   body('title').notEmpty().trim().withMessage('Title is required'),
   body('startDate').isISO8601().withMessage('Valid start date is required'),
-  body('endDate').isISO8601().withMessage('Valid end date is required'),
+  body('endDate').optional().isISO8601().withMessage('Valid end date is required'),
   body('type').optional().isIn(['meeting', 'training', 'inspection', 'maintenance', 'event', 'other']),
   body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
   body('status').optional().isIn(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'])
@@ -130,16 +129,30 @@ router.post('/', [
       tags
     } = req.body;
 
-    // Validate date range
-    if (new Date(startDate) >= new Date(endDate)) {
+    // Validate date range (skip for all-day appointments without endDate)
+    if (endDate && !allDay && new Date(startDate) >= new Date(endDate)) {
       return res.status(400).json({ msg: 'End date must be after start date' });
+    }
+    
+    // For all-day appointments without endDate, set endDate to end of startDate
+    let finalEndDate = endDate;
+    if (allDay && !endDate) {
+      const startDateObj = new Date(startDate);
+      finalEndDate = new Date(startDateObj);
+      finalEndDate.setHours(23, 59, 59, 999); // End of the same day
+    } else if (endDate) {
+      finalEndDate = endDate;
+    } else {
+      // If no endDate provided and not all-day, default to 1 hour after start
+      const startDateObj = new Date(startDate);
+      finalEndDate = new Date(startDateObj.getTime() + 60 * 60 * 1000);
     }
 
     const appointment = new Appointment({
       title,
       description,
       startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      endDate: new Date(finalEndDate),
       allDay: allDay || false,
       location,
       type: type || 'meeting',

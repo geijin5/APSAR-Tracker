@@ -79,8 +79,8 @@ router.get('/:id', auth, async (req, res) => {
 
 // @route   POST /api/maintenance
 // @desc    Create new maintenance record
-// @access  Private - requires operator role or higher
-router.post('/', auth, authorize('admin', 'operator', 'technician'), 
+// @access  Private - all authenticated users
+router.post('/', auth, 
   upload.array('attachments', 5), async (req, res) => {
   try {
     const recordData = { ...req.body };

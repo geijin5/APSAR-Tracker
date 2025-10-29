@@ -60,6 +60,10 @@ const appointmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  createdByName: {
+    type: String,
+    trim: true
+  },
   reminders: [{
     type: {
       type: String,
