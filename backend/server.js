@@ -96,7 +96,7 @@ const createAdminHandler = async (req, res) => {
       firstName: 'Admin',
       lastName: 'User',
       username: 'myusername',        // ← Your custom username
-      email: 'admin@apsar.org',
+      email: `admin-${Date.now()}@apsar.org`,  // Unique email to avoid duplicates
       password: 'mypassword123',     // ← Your custom password
       role: 'admin',
       unit: 'Command',
@@ -122,6 +122,55 @@ const createAdminHandler = async (req, res) => {
 
 app.get('/api/create-admin', createAdminHandler);
 app.post('/api/create-admin', createAdminHandler);
+
+// List all users (for debugging)
+app.get('/api/list-users', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const users = await User.find({}, 'username email role isActive createdAt').limit(20);
+    
+    res.json({
+      message: 'Found users in database',
+      count: users.length,
+      users: users.map(user => ({
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to list users',
+      message: error.message 
+    });
+  }
+});
+
+// Find existing admin users (for login help)
+app.get('/api/find-admin', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const adminUsers = await User.find({ role: 'admin' }, 'username email role isActive createdAt');
+    
+    res.json({
+      message: 'Found admin users',
+      count: adminUsers.length,
+      adminUsers: adminUsers.map(user => ({
+        username: user.username,
+        email: user.email,
+        isActive: user.isActive,
+        note: 'Try logging in with this username'
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to find admin users',
+      message: error.message 
+    });
+  }
+});
 
 // Debug endpoint to check file paths and environment
 app.get('/api/debug', (req, res) => {
