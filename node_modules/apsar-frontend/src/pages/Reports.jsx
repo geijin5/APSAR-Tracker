@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChartBarIcon, DocumentTextIcon, CurrencyDollarIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, DocumentTextIcon, CurrencyDollarIcon, PrinterIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { printDocument, generatePrintableReport } from '../utils/printUtils';
+import { printDocument, generatePrintableReport, generatePrintableChecklist } from '../utils/printUtils';
 
 export default function Reports() {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -40,6 +40,18 @@ export default function Reports() {
     enabled: selectedReport === 'workorder-summary'
   });
 
+  const { data: completedChecklists, refetch: refetchCompletedChecklists } = useQuery({
+    queryKey: ['reports', 'completed-checklists', dateRange],
+    queryFn: async () => {
+      const params = {};
+      if (dateRange.startDate) params.dateFrom = dateRange.startDate;
+      if (dateRange.endDate) params.dateTo = dateRange.endDate;
+      const res = await api.get('/completed-checklists', { params });
+      return res.data;
+    },
+    enabled: selectedReport === 'completed-checklists'
+  });
+
   const handleGenerateReport = (reportType) => {
     setSelectedReport(reportType);
     if (reportType === 'maintenance-cost') {
@@ -48,6 +60,8 @@ export default function Reports() {
       refetchAssetStatus();
     } else if (reportType === 'workorder-summary') {
       refetchWorkOrderSummary();
+    } else if (reportType === 'completed-checklists') {
+      refetchCompletedChecklists();
     }
   };
 
@@ -79,7 +93,7 @@ export default function Reports() {
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Reports & Analytics</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <ReportCard
           icon={CurrencyDollarIcon}
           title="Maintenance Cost Report"
@@ -97,6 +111,12 @@ export default function Reports() {
           title="Work Order Summary"
           description="Work order statistics and trends"
           reportType="workorder-summary"
+        />
+        <ReportCard
+          icon={CheckCircleIcon}
+          title="Completed Checklists"
+          description="View and print completed checklists"
+          reportType="completed-checklists"
         />
       </div>
 
@@ -380,6 +400,180 @@ export default function Reports() {
                   );
                 })}
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedReport === 'completed-checklists' && completedChecklists && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Completed Checklists</h2>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                className="border border-gray-300 rounded px-3 py-1 text-sm"
+                placeholder="Start Date"
+              />
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                className="border border-gray-300 rounded px-3 py-1 text-sm"
+                placeholder="End Date"
+              />
+              <button
+                onClick={() => refetchCompletedChecklists()}
+                className="px-3 py-1 bg-primary-600 text-white rounded text-sm hover:bg-primary-700"
+              >
+                Apply Filter
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{completedChecklists.total || 0}</p>
+                <p className="text-sm text-gray-600 mt-1">Total Completed</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">
+                  {completedChecklists.completedChecklists?.filter(c => c.status === 'completed').length || 0}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Fully Completed</p>
+              </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <p className="text-2xl font-bold text-yellow-600">
+                  {completedChecklists.completedChecklists?.filter(c => c.status === 'partial').length || 0}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Partial</p>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <p className="text-2xl font-bold text-purple-600">
+                  {completedChecklists.completedChecklists?.length > 0 
+                    ? Math.round(completedChecklists.completedChecklists.reduce((acc, c) => acc + c.completionPercentage, 0) / completedChecklists.completedChecklists.length)
+                    : 0}%
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Avg Completion</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Checklist
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Completed By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date & Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Completion
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {completedChecklists.completedChecklists?.map((checklist) => (
+                  <tr key={checklist._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{checklist.templateName}</div>
+                      <div className="text-sm text-gray-500">{checklist.templateCategory}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        checklist.templateType === 'callout' ? 'bg-red-100 text-red-800' :
+                        checklist.templateType === 'maintenance' ? 'bg-blue-100 text-blue-800' :
+                        checklist.templateType === 'vehicle_inspection' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {checklist.templateType.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {checklist.completedBy}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div>{checklist.completedDate}</div>
+                      <div className="text-gray-500">{checklist.completedTime}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        checklist.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {checklist.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              checklist.completionPercentage === 100 ? 'bg-green-600' : 
+                              checklist.completionPercentage >= 75 ? 'bg-blue-600' :
+                              checklist.completionPercentage >= 50 ? 'bg-yellow-600' : 'bg-red-600'
+                            }`}
+                            style={{ width: `${checklist.completionPercentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs">{checklist.completionPercentage}%</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {checklist.completedItems}/{checklist.totalItems} items
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          const headerInfo = {
+                            'Completed By': checklist.completedBy,
+                            'Date': checklist.completedDate,
+                            'Time': checklist.completedTime,
+                            'Completion': `${checklist.completionPercentage}% (${checklist.completedItems}/${checklist.totalItems} items)`,
+                            ...(checklist.notes && { 'Notes': checklist.notes })
+                          };
+                          
+                          const templateData = {
+                            name: checklist.templateName,
+                            type: checklist.templateType,
+                            category: checklist.templateCategory
+                          };
+                          
+                          const printComponent = generatePrintableChecklist(checklist.items, templateData, headerInfo);
+                          printDocument(printComponent, `Completed Checklist - ${checklist.templateName} - ${checklist.completedDate}`);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        <PrinterIcon className="h-4 w-4 inline mr-1" />
+                        Print
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {(!completedChecklists.completedChecklists || completedChecklists.completedChecklists.length === 0) && (
+            <div className="text-center py-8">
+              <CheckCircleIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-gray-500">No completed checklists found for the selected date range.</p>
             </div>
           )}
         </div>
