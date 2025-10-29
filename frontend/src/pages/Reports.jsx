@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChartBarIcon, DocumentTextIcon, CurrencyDollarIcon, PrinterIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { printDocument, generatePrintableReport, generatePrintableChecklist } from '../utils/printUtils';
+import { formatDate, isOverdue } from '../utils/dateUtils';
 
 export default function Reports() {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -265,7 +266,7 @@ export default function Reports() {
               <div className="space-y-2">
                 {assetStatus.needingMaintenance.map((record, idx) => (
                   <div key={idx} className={`flex justify-between items-center p-3 rounded-lg ${
-                    new Date(record.dueDate) < new Date() ? 'bg-red-50' : 'bg-yellow-50'
+                    isOverdue(record.dueDate) ? 'bg-red-50' : 'bg-yellow-50'
                   }`}>
                     <div className="flex-1">
                       <div className="font-medium">{record.asset?.name || 'Unknown Asset'}</div>
@@ -274,12 +275,12 @@ export default function Reports() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-sm font-semibold ${new Date(record.dueDate) < new Date() ? 'text-red-600' : 'text-yellow-600'}`}>
-                        {new Date(record.dueDate).toLocaleDateString()}
+                      <div className={`text-sm font-semibold ${isOverdue(record.dueDate) ? 'text-red-600' : 'text-yellow-600'}`}>
+                        {formatDate(record.dueDate)}
                       </div>
                       {record.dueDate && (
                         <div className="text-xs text-gray-500">
-                          {new Date(record.dueDate) < new Date() ? 'Overdue' : 'Due'}
+                          {isOverdue(record.dueDate) ? 'Overdue' : 'Due'}
                         </div>
                       )}
                     </div>

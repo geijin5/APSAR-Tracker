@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckIcon, XMarkIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { getCurrentDate, getCurrentTime } from '../utils/dateUtils';
 
 const Checklist = ({ 
   checklist = [], 
@@ -29,11 +30,10 @@ const Checklist = ({
       const allRequiredCompleted = requiredItems.length > 0 && requiredItems.every(item => item.completed);
       
       if (allRequiredCompleted && !completionData.completedDate) {
-        const now = new Date();
         const newCompletionData = {
           ...completionData,
-          completedDate: now.toLocaleDateString(),
-          completedTime: now.toLocaleTimeString()
+          completedDate: getCurrentDate(),
+          completedTime: getCurrentTime()
         };
         setCompletionData(newCompletionData);
         onCompletionChange?.(newCompletionData);

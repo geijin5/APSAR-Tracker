@@ -4,6 +4,7 @@ import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { printDocument, generatePrintableWorkOrder } from '../utils/printUtils';
+import { formatDate, getCurrentDate, getCurrentTime } from '../utils/dateUtils';
 
 export default function WorkOrders() {
   const { user } = useAuth();
@@ -21,10 +22,9 @@ export default function WorkOrders() {
   // Auto-fill current date and time when form opens
   useEffect(() => {
     if (showForm) {
-      const now = new Date();
       setCurrentDateTime({
-        date: now.toLocaleDateString(),
-        time: now.toLocaleTimeString()
+        date: getCurrentDate(),
+        time: getCurrentTime()
       });
       // Reset name field when form opens
       setCreatedByName('');
@@ -512,7 +512,7 @@ export default function WorkOrders() {
                       <div key={idx} className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm text-gray-900">{note.text}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {note.author?.firstName} {note.author?.lastName} • {new Date(note.createdAt).toLocaleDateString()}
+                          {note.author?.firstName} {note.author?.lastName} • {formatDate(note.createdAt)}
                         </p>
                       </div>
                     ))}
@@ -532,7 +532,7 @@ export default function WorkOrders() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Scheduled Start</h3>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(selectedWorkOrder.scheduledStartDate).toLocaleDateString()}
+                      {formatDate(selectedWorkOrder.scheduledStartDate)}
                     </p>
                   </div>
                 )}
@@ -540,7 +540,7 @@ export default function WorkOrders() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Completed Date</h3>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(selectedWorkOrder.actualEndDate).toLocaleDateString()}
+                      {formatDate(selectedWorkOrder.actualEndDate)}
                     </p>
                   </div>
                 )}

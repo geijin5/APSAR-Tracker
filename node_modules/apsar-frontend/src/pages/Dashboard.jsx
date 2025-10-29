@@ -5,6 +5,7 @@ import api from '../services/api'
 import Calendar from '../components/Calendar'
 import Checklist from '../components/Checklist'
 import { printDocument, generatePrintableChecklist } from '../utils/printUtils'
+import { formatDate, formatDateCompact, getCurrentDate, getCurrentTime, getCurrentISOString } from '../utils/dateUtils'
 import {
   CubeIcon,
   WrenchScrewdriverIcon,
@@ -311,11 +312,7 @@ export default function Dashboard() {
             {(() => {
               // Group maintenance by date
               const groupedByDate = stats.maintenance.upcoming.reduce((acc, maintenance) => {
-                const dateKey = new Date(maintenance.dueDate).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                });
+                const dateKey = formatDateCompact(maintenance.dueDate);
                 if (!acc[dateKey]) {
                   acc[dateKey] = [];
                 }
@@ -456,7 +453,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-500">
-                      {new Date(activity.completedDate).toLocaleDateString()}
+                      {formatDate(activity.completedDate)}
                     </p>
                   </div>
                 </li>
@@ -534,8 +531,8 @@ export default function Dashboard() {
                       templateCategory: selectedChecklist.category,
                       items: activeChecklist,
                       completedBy: checklistCompletion.completedBy,
-                      completedDate: checklistCompletion.completedDate || new Date().toLocaleDateString(),
-                      completedTime: checklistCompletion.completedTime || new Date().toLocaleTimeString(),
+                      completedDate: checklistCompletion.completedDate || getCurrentDate(),
+                      completedTime: checklistCompletion.completedTime || getCurrentTime(),
                       notes: checklistCompletion.notes || ''
                     };
                     
@@ -563,7 +560,7 @@ export default function Dashboard() {
             <form onSubmit={handleCreateAppointment}>
               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">
-                  New Appointment - {selectedDate.toLocaleDateString()}
+                  New Appointment - {formatDate(selectedDate)}
                 </h2>
                 <button
                   type="button"

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import Checklist from '../components/Checklist';
 import { printDocument, generatePrintableMaintenanceRecord } from '../utils/printUtils';
+import { formatDate, getCurrentDate, getCurrentTime } from '../utils/dateUtils';
 
 export default function Maintenance() {
   const { user } = useAuth();
@@ -23,10 +24,9 @@ export default function Maintenance() {
   // Auto-fill current date and time when form opens
   useEffect(() => {
     if (showForm) {
-      const now = new Date();
       setCurrentDateTime({
-        date: now.toLocaleDateString(),
-        time: now.toLocaleTimeString()
+        date: getCurrentDate(),
+        time: getCurrentTime()
       });
       // Reset name field when form opens
       setCreatedByName('');
@@ -375,10 +375,10 @@ export default function Maintenance() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.type}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">{record.title}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {record.scheduledDate ? new Date(record.scheduledDate).toLocaleDateString() : '-'}
+                  {formatDate(record.scheduledDate)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {record.dueDate ? new Date(record.dueDate).toLocaleDateString() : '-'}
+                  {formatDate(record.dueDate)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -488,13 +488,13 @@ export default function Maintenance() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Scheduled Date</h3>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedRecord.scheduledDate ? new Date(selectedRecord.scheduledDate).toLocaleDateString() : 'N/A'}
+                    {formatDate(selectedRecord.scheduledDate)}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Due Date</h3>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedRecord.dueDate ? new Date(selectedRecord.dueDate).toLocaleDateString() : 'N/A'}
+                    {formatDate(selectedRecord.dueDate)}
                   </p>
                 </div>
                 {selectedRecord.performedBy && (
@@ -509,7 +509,7 @@ export default function Maintenance() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Completed Date</h3>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(selectedRecord.completedDate).toLocaleDateString()}
+                      {formatDate(selectedRecord.completedDate)}
                     </p>
                   </div>
                 )}

@@ -4,6 +4,7 @@ import { PlusIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { printDocument, generatePrintableQuote } from '../utils/printUtils';
+import { formatDate } from '../utils/dateUtils';
 
 export default function Quotes() {
   const { user } = useAuth();
@@ -255,7 +256,7 @@ export default function Quotes() {
                     ${quote.totalCost?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {quote.quoteDate ? new Date(quote.quoteDate).toLocaleDateString() : '-'}
+                    {formatDate(quote.quoteDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -319,13 +320,13 @@ export default function Quotes() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Quote Date</h3>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedQuote.quoteDate ? new Date(selectedQuote.quoteDate).toLocaleDateString() : 'N/A'}
+                    {formatDate(selectedQuote.quoteDate)}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Expiry Date</h3>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedQuote.expiryDate ? new Date(selectedQuote.expiryDate).toLocaleDateString() : 'N/A'}
+                    {formatDate(selectedQuote.expiryDate)}
                   </p>
                 </div>
               </div>
