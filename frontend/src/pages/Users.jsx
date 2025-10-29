@@ -56,7 +56,7 @@ export default function Users() {
     const data = {
       firstName: formData.get('firstName'),
       lastName: formData.get('lastName'),
-      email: formData.get('email'),
+      username: formData.get('username'),
       password: formData.get('password'),
       role: formData.get('role'),
       unit: formData.get('unit')
@@ -102,8 +102,8 @@ export default function Users() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" name="email" required className="input" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input type="text" name="username" required minLength={3} maxLength={20} className="input" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -142,7 +142,7 @@ export default function Users() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -156,11 +156,11 @@ export default function Users() {
                       <UserCircleIcon className="h-8 w-8 text-gray-400 mr-3" />
                       <div>
                         <div className="text-sm font-medium text-gray-900">{u.firstName} {u.lastName}</div>
-                        <div className="text-sm text-gray-500">{u.email}</div>
+                        <div className="text-sm text-gray-500">@{u.username}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.username}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800 capitalize">
                       {u.role}
