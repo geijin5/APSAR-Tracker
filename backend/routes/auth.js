@@ -15,14 +15,20 @@ const generateToken = (userId) => {
 // @desc    Register a new user
 // @access  Public
 router.post('/register', [
-  body('firstName').notEmpty().trim(),
-  body('lastName').notEmpty().trim(),
-  body('username').isLength({ min: 3, max: 20 }).trim(),
-  body('password').isLength({ min: 6 }),
+  body('firstName').notEmpty().trim().withMessage('First name is required'),
+  body('lastName').notEmpty().trim().withMessage('Last name is required'),
+  body('username').isLength({ min: 3, max: 20 }).trim().withMessage('Username must be 3-20 characters'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role').isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role'),
+  body('unit').optional().trim()
 ], async (req, res) => {
   try {
+    // Debug: Log the received data
+    console.log('Registration attempt:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
