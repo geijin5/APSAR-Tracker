@@ -18,7 +18,6 @@ router.post('/register', [
   body('firstName').notEmpty().trim(),
   body('lastName').notEmpty().trim(),
   body('username').isLength({ min: 3, max: 20 }).trim(),
-  body('email').optional().isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
 ], async (req, res) => {
   try {
@@ -27,7 +26,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, username, email, password, role, unit } = req.body;
+    const { firstName, lastName, username, password, role, unit } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ username });
@@ -40,7 +39,6 @@ router.post('/register', [
       firstName,
       lastName,
       username,
-      email,
       password,
       role: role || 'viewer',
       unit
@@ -57,7 +55,6 @@ router.post('/register', [
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        email: user.email,
         role: user.role,
         unit: user.unit
       }
@@ -109,7 +106,6 @@ router.post('/login', [
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        email: user.email,
         role: user.role,
         unit: user.unit
       }

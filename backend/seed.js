@@ -26,7 +26,6 @@ const seedDatabase = async () => {
       firstName: 'Admin',
       lastName: 'User',
       username: 'myusername',        // ← Your custom username
-      email: 'admin@apsar.org',
       password: 'mypassword123',     // ← Your custom password
       role: 'admin',
       unit: 'Command'
@@ -37,7 +36,6 @@ const seedDatabase = async () => {
       firstName: 'John',
       lastName: 'Technician',
       username: 'tech',
-      email: 'tech@apsar.org',
       password: 'password123',
       role: 'technician',
       unit: 'Technical'
@@ -48,7 +46,6 @@ const seedDatabase = async () => {
       firstName: 'Sarah',
       lastName: 'Operator',
       username: 'operator',
-      email: 'operator@apsar.org',
       password: 'password123',
       role: 'operator',
       unit: 'Operations'
@@ -59,7 +56,6 @@ const seedDatabase = async () => {
       firstName: 'Mike',
       lastName: 'Viewer',
       username: 'viewer',
-      email: 'viewer@apsar.org',
       password: 'password123',
       role: 'viewer',
       unit: 'General'

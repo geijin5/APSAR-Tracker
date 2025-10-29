@@ -96,7 +96,6 @@ const createAdminHandler = async (req, res) => {
       firstName: 'Admin',
       lastName: 'User',
       username: 'myusername',        // ← Your custom username
-      email: `admin-${Date.now()}@apsar.org`,  // Unique email to avoid duplicates
       password: 'mypassword123',     // ← Your custom password
       role: 'admin',
       unit: 'Command',
@@ -127,14 +126,13 @@ app.post('/api/create-admin', createAdminHandler);
 app.get('/api/list-users', async (req, res) => {
   try {
     const User = require('./models/User');
-    const users = await User.find({}, 'username email role isActive createdAt').limit(20);
+    const users = await User.find({}, 'username role isActive createdAt').limit(20);
     
     res.json({
       message: 'Found users in database',
       count: users.length,
       users: users.map(user => ({
         username: user.username,
-        email: user.email,
         role: user.role,
         isActive: user.isActive,
         createdAt: user.createdAt
@@ -152,14 +150,13 @@ app.get('/api/list-users', async (req, res) => {
 app.get('/api/find-admin', async (req, res) => {
   try {
     const User = require('./models/User');
-    const adminUsers = await User.find({ role: 'admin' }, 'username email role isActive createdAt');
+    const adminUsers = await User.find({ role: 'admin' }, 'username role isActive createdAt');
     
     res.json({
       message: 'Found admin users',
       count: adminUsers.length,
       adminUsers: adminUsers.map(user => ({
         username: user.username,
-        email: user.email,
         isActive: user.isActive,
         note: 'Try logging in with this username'
       }))
