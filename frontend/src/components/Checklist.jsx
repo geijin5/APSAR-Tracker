@@ -6,13 +6,49 @@ const Checklist = ({
   onChecklistChange, 
   readonly = false, 
   showProgress = true,
-  templateData = null 
+  templateData = null,
+  showCompletion = false,
+  onCompletionChange = null
 }) => {
   const [items, setItems] = useState(checklist);
+  const [completionData, setCompletionData] = useState({
+    completedBy: '',
+    completedDate: '',
+    completedTime: '',
+    notes: ''
+  });
 
   useEffect(() => {
     setItems(checklist);
   }, [checklist]);
+
+  // Auto-fill date and time when all required items are completed
+  useEffect(() => {
+    if (showCompletion && !readonly) {
+      const requiredItems = items.filter(item => item.required);
+      const allRequiredCompleted = requiredItems.length > 0 && requiredItems.every(item => item.completed);
+      
+      if (allRequiredCompleted && !completionData.completedDate) {
+        const now = new Date();
+        const newCompletionData = {
+          ...completionData,
+          completedDate: now.toLocaleDateString(),
+          completedTime: now.toLocaleTimeString()
+        };
+        setCompletionData(newCompletionData);
+        onCompletionChange?.(newCompletionData);
+      }
+    }
+  }, [items, showCompletion, readonly, completionData, onCompletionChange]);
+
+  const handleCompletionDataChange = (field, value) => {
+    const updatedData = {
+      ...completionData,
+      [field]: value
+    };
+    setCompletionData(updatedData);
+    onCompletionChange?.(updatedData);
+  };
 
   const handleItemToggle = (index) => {
     if (readonly) return;
@@ -167,6 +203,102 @@ const Checklist = ({
         {!readonly && (
           <div className="mt-4 text-xs text-gray-500 italic">
             * Required items must be completed
+          </div>
+        )}
+
+        {/* Completion Section */}
+        {showCompletion && !readonly && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-blue-900 mb-3">Checklist Completion</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Completed By *
+                </label>
+                <input
+                  type="text"
+                  value={completionData.completedBy}
+                  onChange={(e) => handleCompletionDataChange('completedBy', e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Date Completed
+                  </label>
+                  <input
+                    type="text"
+                    value={completionData.completedDate}
+                    readOnly
+                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-600"
+                    placeholder="Auto-filled"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Time Completed
+                  </label>
+                  <input
+                    type="text"
+                    value={completionData.completedTime}
+                    readOnly
+                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-600"
+                    placeholder="Auto-filled"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Completion Notes (Optional)
+              </label>
+              <textarea
+                value={completionData.notes}
+                onChange={(e) => handleCompletionDataChange('notes', e.target.value)}
+                placeholder="Add any additional notes about this checklist completion..."
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                rows="3"
+              />
+            </div>
+
+            {completionData.completedDate && (
+              <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+                ✅ <strong>Auto-completed:</strong> Date and time filled automatically when all required items were checked.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Readonly Completion Display */}
+        {showCompletion && readonly && completionData.completedBy && (
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Completion Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">Completed By:</span>
+                <p className="text-gray-900">{completionData.completedBy}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Date:</span>
+                <p className="text-gray-900">{completionData.completedDate}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Time:</span>
+                <p className="text-gray-900">{completionData.completedTime}</p>
+              </div>
+            </div>
+            {completionData.notes && (
+              <div className="mt-3">
+                <span className="font-medium text-gray-700">Notes:</span>
+                <p className="text-gray-900 mt-1">{completionData.notes}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

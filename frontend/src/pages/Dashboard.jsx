@@ -19,6 +19,8 @@ export default function Dashboard() {
   const [activeChecklist, setActiveChecklist] = useState([]);
   const [showCreateAppointment, setShowCreateAppointment] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [checklistCompletion, setChecklistCompletion] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -49,6 +51,7 @@ export default function Dashboard() {
       queryClient.invalidateQueries(['dashboard-stats']);
       setShowCreateAppointment(false);
       setSelectedDate(null);
+      setIsAllDay(false);
     }
   });
 
@@ -140,33 +143,44 @@ export default function Dashboard() {
     e.preventDefault();
     const formData = new FormData(e.target);
     
+    const isAllDay = formData.has('allDay');
     const startDateTime = new Date(selectedDate);
-    const endDateTime = new Date(selectedDate);
     
-    // Set times from form
-    const startTime = formData.get('startTime');
-    const endTime = formData.get('endTime');
-    
-    if (startTime) {
-      const [hours, minutes] = startTime.split(':');
-      startDateTime.setHours(parseInt(hours), parseInt(minutes));
-    }
-    
-    if (endTime) {
-      const [hours, minutes] = endTime.split(':');
-      endDateTime.setHours(parseInt(hours), parseInt(minutes));
+    // For all-day appointments, set to start of day
+    if (isAllDay) {
+      startDateTime.setHours(0, 0, 0, 0);
+    } else {
+      // Set times from form for timed appointments
+      const startTime = formData.get('startTime');
+      if (startTime) {
+        const [hours, minutes] = startTime.split(':');
+        startDateTime.setHours(parseInt(hours), parseInt(minutes));
+      }
     }
 
     const appointmentData = {
       title: formData.get('title'),
       description: formData.get('description'),
       startDate: startDateTime.toISOString(),
-      endDate: endDateTime.toISOString(),
       location: formData.get('location'),
       type: formData.get('type') || 'meeting',
       priority: formData.get('priority') || 'medium',
-      allDay: formData.has('allDay')
+      allDay: isAllDay
     };
+
+    // Only add endDate for non-all-day appointments
+    if (!isAllDay) {
+      const endDateTime = new Date(selectedDate);
+      const endTime = formData.get('endTime');
+      if (endTime) {
+        const [hours, minutes] = endTime.split(':');
+        endDateTime.setHours(parseInt(hours), parseInt(minutes));
+      } else {
+        // Default to 1 hour after start if no end time specified
+        endDateTime.setTime(startDateTime.getTime() + 60 * 60 * 1000);
+      }
+      appointmentData.endDate = endDateTime.toISOString();
+    }
 
     createAppointmentMutation.mutate(appointmentData);
   };
@@ -184,6 +198,7 @@ export default function Dashboard() {
     
     setActiveChecklist(checklistItems);
     setSelectedChecklist(template);
+    setChecklistCompletion(null); // Reset completion data
   };
 
   const getTypeColor = (type) => {
@@ -461,6 +476,8 @@ export default function Dashboard() {
                 onChecklistChange={setActiveChecklist}
                 showProgress={true}
                 templateData={selectedChecklist}
+                showCompletion={true}
+                onCompletionChange={setChecklistCompletion}
               />
               
               <div className="mt-6 flex gap-3 justify-end">
@@ -468,6 +485,7 @@ export default function Dashboard() {
                   onClick={() => {
                     setSelectedChecklist(null);
                     setActiveChecklist([]);
+                    setChecklistCompletion(null);
                   }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
@@ -475,17 +493,41 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={() => {
+                    // Validate that completion name is filled
+                    if (!checklistCompletion?.completedBy?.trim()) {
+                      alert('Please enter your name in the "Completed By" field before completing the checklist.');
+                      return;
+                    }
+
+                    // Check if all required items are completed
+                    const requiredItems = activeChecklist.filter(item => item.required);
+                    const allRequiredCompleted = requiredItems.length === 0 || requiredItems.every(item => item.completed);
+                    
+                    if (!allRequiredCompleted) {
+                      alert('Please complete all required items (marked with *) before finishing the checklist.');
+                      return;
+                    }
+
+                    // Use actual completion data for printing
                     const headerInfo = {
-                      'Completed By': 'Field User',
-                      'Date': new Date().toLocaleDateString(),
-                      'Time': new Date().toLocaleTimeString()
+                      'Completed By': checklistCompletion.completedBy,
+                      'Date': checklistCompletion.completedDate || new Date().toLocaleDateString(),
+                      'Time': checklistCompletion.completedTime || new Date().toLocaleTimeString(),
+                      ...(checklistCompletion.notes && { 'Notes': checklistCompletion.notes })
                     };
+                    
                     const printComponent = generatePrintableChecklist(activeChecklist, selectedChecklist, headerInfo);
                     printDocument(printComponent, `Completed Checklist - ${selectedChecklist.name}`);
                     setSelectedChecklist(null);
                     setActiveChecklist([]);
+                    setChecklistCompletion(null);
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  disabled={!checklistCompletion?.completedBy?.trim()}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                    checklistCompletion?.completedBy?.trim() 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-gray-400 cursor-not-allowed'
+                  }`}
                 >
                   Complete & Print Checklist
                 </button>
