@@ -24,7 +24,7 @@ export default function Dashboard() {
   const [isAllDay, setIsAllDay] = useState(false);
   const [checklistCompletion, setChecklistCompletion] = useState(null);
 
-  const queryClient = useQueryClient();</thinking>
+  const queryClient = useQueryClient();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
