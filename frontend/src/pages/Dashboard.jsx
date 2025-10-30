@@ -110,9 +110,10 @@ export default function Dashboard() {
       }
     });
     
-    // Add appointment events
+    // Add appointment events (exclude meetings, training, and events - case-insensitive)
     stats.calendar.appointments?.forEach(item => {
-      if (item.startDate) {
+      const itemType = (item.type || '').toLowerCase();
+      if (item.startDate && !['meeting', 'training', 'event'].includes(itemType)) {
         events.push({
           _id: item._id,
           date: new Date(item.startDate),
@@ -121,15 +122,12 @@ export default function Dashboard() {
           title: item.title,
           description: item.description,
           location: item.location,
-          type: item.type,
+          type: itemType || 'other',
           priority: item.priority,
           status: item.status,
           attendees: item.attendees,
-          color: item.type === 'meeting' ? 'bg-blue-100 text-blue-800 border-blue-400' :
-                 item.type === 'training' ? 'bg-green-100 text-green-800 border-green-400' :
-                 item.type === 'inspection' ? 'bg-purple-100 text-purple-800 border-purple-400' :
-                 item.type === 'maintenance' ? 'bg-orange-100 text-orange-800 border-orange-400' :
-                 item.type === 'event' ? 'bg-pink-100 text-pink-800 border-pink-400' :
+          color: itemType === 'inspection' ? 'bg-purple-100 text-purple-800 border-purple-400' :
+                 itemType === 'maintenance' ? 'bg-orange-100 text-orange-800 border-orange-400' :
                  'bg-gray-100 text-gray-800 border-gray-400'
         });
       }
@@ -181,7 +179,7 @@ export default function Dashboard() {
       description: formData.get('description'),
       startDate: startDateTime.toISOString(),
       location: formData.get('location'),
-      type: formData.get('type') || 'meeting',
+      type: formData.get('type') || 'other',
       priority: formData.get('priority') || 'medium',
       allDay: isAllDay,
       ...(user?.role === 'viewer' && { createdByName: formData.get('createdByName') })
@@ -645,11 +643,8 @@ export default function Dashboard() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select name="type" className="input">
-                      <option value="meeting">Meeting</option>
-                      <option value="training">Training</option>
                       <option value="inspection">Inspection</option>
                       <option value="maintenance">Maintenance</option>
-                      <option value="event">Event</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
