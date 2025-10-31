@@ -110,10 +110,13 @@ export default function Dashboard() {
       }
     });
     
-    // Add appointment events (exclude meetings, training, and events - case-insensitive)
+    // Add appointment events (exclude meetings, training, and events - case-insensitive, including title keywords)
     stats.calendar.appointments?.forEach(item => {
-      const itemType = (item.type || '').toLowerCase();
-      if (item.startDate && !['meeting', 'training', 'event'].includes(itemType)) {
+      const itemType = (item.type || '').toString().trim().toLowerCase();
+      const titleText = (item.title || '').toString().toLowerCase();
+      const isExcludedByType = ['meeting', 'training', 'event'].includes(itemType);
+      const isExcludedByTitle = /(\bmeeting\b|\btraining\b|\bevent\b)/i.test(titleText);
+      if (item.startDate && !isExcludedByType && !isExcludedByTitle) {
         events.push({
           _id: item._id,
           date: new Date(item.startDate),
