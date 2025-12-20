@@ -1,33 +1,127 @@
 const express = require('express');
 const router = express.Router();
 const Message = require('../models/Chat');
+const ChatGroup = require('../models/ChatGroup');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+// Predefined group types
+const PREDEFINED_GROUPS = ['main', 'parade', 'training', 'callout'];
+
+// Initialize predefined groups on first use
+const initializeGroups = async () => {
+  for (const groupType of PREDEFINED_GROUPS) {
+    const groupName = groupType.charAt(0).toUpperCase() + groupType.slice(1);
+    const existing = await ChatGroup.findOne({ type: groupType });
+    if (!existing) {
+      // Get all active users for main group, empty for others
+      const allUsers = groupType === 'main' 
+        ? await User.find({ isActive: true }).select('_id')
+        : [];
+      
+      await ChatGroup.create({
+        name: groupName,
+        type: groupType,
+        description: `${groupName} group chat`,
+        createdBy: null, // System created
+        members: allUsers.map(u => u._id),
+        autoClearEnabled: true
+      });
+    }
+  }
+};
+
+// @route   GET /api/chat/groups
+// @desc    Get all chat groups
+// @access  Private
+router.get('/groups', auth, async (req, res) => {
+  try {
+    await initializeGroups();
+    
+    const groups = await ChatGroup.find()
+      .populate('createdBy', 'firstName lastName')
+      .populate('members', 'firstName lastName username')
+      .sort({ type: 1, name: 1 });
+
+    res.json(groups);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   POST /api/chat/groups
+// @desc    Create a new group chat
+// @access  Private
+router.post('/groups', auth, async (req, res) => {
+  try {
+    const { name, description, memberIds } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Group name is required' });
+    }
+
+    // Check if name already exists
+    const existing = await ChatGroup.findOne({ name: name.trim() });
+    if (existing) {
+      return res.status(400).json({ message: 'Group name already exists' });
+    }
+
+    const group = new ChatGroup({
+      name: name.trim(),
+      type: 'custom',
+      description: description || '',
+      createdBy: req.user.id,
+      members: memberIds || [],
+      autoClearEnabled: true
+    });
+
+    await group.save();
+
+    const populated = await ChatGroup.findById(group._id)
+      .populate('createdBy', 'firstName lastName')
+      .populate('members', 'firstName lastName username');
+
+    res.status(201).json(populated);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 // @route   GET /api/chat/conversations
-// @desc    Get all conversations for current user
+// @desc    Get all conversations (1-on-1 and groups)
 // @access  Private
 router.get('/conversations', auth, async (req, res) => {
   try {
-    // Get all unique users the current user has messaged or received messages from
-    const sentMessages = await Message.find({ sender: req.user.id })
+    await initializeGroups();
+
+    // Get 1-on-1 conversations
+    const sentMessages = await Message.find({ 
+      sender: req.user.id,
+      groupType: null,
+      recipient: { $ne: null }
+    })
       .select('recipient')
       .distinct('recipient');
 
-    const receivedMessages = await Message.find({ recipient: req.user.id })
+    const receivedMessages = await Message.find({ 
+      recipient: req.user.id,
+      groupType: null
+    })
       .select('sender')
       .distinct('sender');
 
     const allUserIds = [...new Set([...sentMessages, ...receivedMessages])];
 
-    // Get latest message for each conversation
-    const conversations = await Promise.all(
+    const oneOnOneConversations = await Promise.all(
       allUserIds.map(async (userId) => {
         const latestMessage = await Message.findOne({
           $or: [
-            { sender: req.user.id, recipient: userId },
-            { sender: userId, recipient: req.user.id }
+            { sender: req.user.id, recipient: userId, groupType: null },
+            { sender: userId, recipient: req.user.id, groupType: null }
           ]
         })
           .sort({ createdAt: -1 })
@@ -37,12 +131,14 @@ router.get('/conversations', auth, async (req, res) => {
         const unreadCount = await Message.countDocuments({
           sender: userId,
           recipient: req.user.id,
-          read: false
+          read: false,
+          groupType: null
         });
 
         const otherUser = await User.findById(userId).select('firstName lastName username');
 
         return {
+          type: 'user',
           user: otherUser,
           latestMessage,
           unreadCount
@@ -50,23 +146,124 @@ router.get('/conversations', auth, async (req, res) => {
       })
     );
 
+    // Get group conversations
+    const groups = await ChatGroup.find();
+    const groupConversations = await Promise.all(
+      groups.map(async (group) => {
+        const latestMessage = await Message.findOne({
+          $or: [
+            { groupType: group.type, groupName: null },
+            { groupName: group.name }
+          ]
+        })
+          .sort({ createdAt: -1 })
+          .populate('sender', 'firstName lastName username');
+
+        // Count unread messages (messages not read by current user)
+        const unreadCount = await Message.countDocuments({
+          $or: [
+            { groupType: group.type, groupName: null },
+            { groupName: group.name }
+          ],
+          sender: { $ne: req.user.id },
+          readBy: { $ne: req.user.id }
+        });
+
+        return {
+          type: 'group',
+          group: {
+            _id: group._id,
+            name: group.name,
+            type: group.type,
+            description: group.description
+          },
+          latestMessage,
+          unreadCount
+        };
+      })
+    );
+
+    const allConversations = [...oneOnOneConversations, ...groupConversations];
+
     // Sort by latest message time
-    conversations.sort((a, b) => {
+    allConversations.sort((a, b) => {
       if (!a.latestMessage) return 1;
       if (!b.latestMessage) return -1;
       return b.latestMessage.createdAt - a.latestMessage.createdAt;
     });
 
-    res.json(conversations);
+    res.json(allConversations);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
 });
 
+// @route   GET /api/chat/messages/group/:groupType
+// @route   GET /api/chat/messages/group/custom/:groupName
 // @route   GET /api/chat/messages/:userId
-// @desc    Get messages between current user and another user
+// @desc    Get messages for a group or 1-on-1 conversation
 // @access  Private
+router.get('/messages/group/:groupType', auth, async (req, res) => {
+  try {
+    const { groupType } = req.params;
+    const { limit = 50, before } = req.query;
+
+    const query = { groupType };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await Message.find(query)
+      .populate('sender', 'firstName lastName username')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    // Mark messages as read by current user
+    const messageIds = messages.map(m => m._id);
+    await Message.updateMany(
+      { _id: { $in: messageIds }, 'readBy.user': { $ne: req.user.id } },
+      { $push: { readBy: { user: req.user.id, readAt: new Date() } } }
+    );
+
+    res.json(messages.reverse());
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+router.get('/messages/group/custom/:groupName', auth, async (req, res) => {
+  try {
+    const { groupName } = req.params;
+    const { limit = 50, before } = req.query;
+
+    const query = { groupName };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await Message.find(query)
+      .populate('sender', 'firstName lastName username')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    // Mark messages as read by current user
+    const messageIds = messages.map(m => m._id);
+    await Message.updateMany(
+      { _id: { $in: messageIds }, 'readBy.user': { $ne: req.user.id } },
+      { $push: { readBy: { user: req.user.id, readAt: new Date() } } }
+    );
+
+    res.json(messages.reverse());
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 router.get('/messages/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -74,8 +271,8 @@ router.get('/messages/:userId', auth, async (req, res) => {
 
     const query = {
       $or: [
-        { sender: req.user.id, recipient: userId },
-        { sender: userId, recipient: req.user.id }
+        { sender: req.user.id, recipient: userId, groupType: null },
+        { sender: userId, recipient: req.user.id, groupType: null }
       ]
     };
 
@@ -91,7 +288,7 @@ router.get('/messages/:userId', auth, async (req, res) => {
 
     // Mark messages as read
     await Message.updateMany(
-      { sender: userId, recipient: req.user.id, read: false },
+      { sender: userId, recipient: req.user.id, read: false, groupType: null },
       { read: true, readAt: new Date() }
     );
 
@@ -103,23 +300,27 @@ router.get('/messages/:userId', auth, async (req, res) => {
 });
 
 // @route   POST /api/chat/messages
-// @desc    Send a message
+// @desc    Send a message (to user or group)
 // @access  Private
 router.post('/messages', auth, upload.array('attachments', 5), async (req, res) => {
   try {
-    const { recipient, content, isBroadcast } = req.body;
+    const { recipient, groupType, groupName, content } = req.body;
 
-    if (!content || (!recipient && !isBroadcast)) {
-      return res.status(400).json({ message: 'Content and recipient are required' });
+    if (!content || (!recipient && !groupType && !groupName)) {
+      return res.status(400).json({ message: 'Content and recipient/group are required' });
     }
 
     const messageData = {
       sender: req.user.id,
-      content,
-      isBroadcast: isBroadcast === 'true' || isBroadcast === true
+      content
     };
 
-    if (!messageData.isBroadcast) {
+    if (groupType) {
+      messageData.groupType = groupType;
+    } else if (groupName) {
+      messageData.groupType = 'custom';
+      messageData.groupName = groupName;
+    } else {
       messageData.recipient = recipient;
     }
 
@@ -146,27 +347,49 @@ router.post('/messages', auth, upload.array('attachments', 5), async (req, res) 
   }
 });
 
-// @route   PUT /api/chat/messages/:id/read
-// @desc    Mark message as read
+// @route   DELETE /api/chat/clear/:groupType
+// @route   DELETE /api/chat/clear/custom/:groupName
+// @desc    Clear all messages from a group (admin/operator for callout, anyone for others)
 // @access  Private
-router.put('/messages/:id/read', auth, async (req, res) => {
+router.delete('/clear/:groupType', auth, async (req, res) => {
   try {
-    const message = await Message.findById(req.params.id);
+    const { groupType } = req.params;
 
-    if (!message) {
-      return res.status(404).json({ message: 'Message not found' });
+    // For callout, only admin and operator can clear
+    if (groupType === 'callout' && !['admin', 'operator'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Only admins and operators can clear callout chat' });
     }
 
-    // Only recipient can mark as read
-    if (message.recipient.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
+    const result = await Message.deleteMany({ groupType });
+    
+    // Update last cleared time
+    await ChatGroup.findOneAndUpdate(
+      { type: groupType },
+      { lastCleared: new Date() },
+      { upsert: true }
+    );
 
-    message.read = true;
-    message.readAt = new Date();
-    await message.save();
+    res.json({ message: `Cleared ${result.deletedCount} messages`, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
 
-    res.json(message);
+router.delete('/clear/custom/:groupName', auth, async (req, res) => {
+  try {
+    const { groupName } = req.params;
+
+    const result = await Message.deleteMany({ groupName });
+    
+    // Update last cleared time
+    await ChatGroup.findOneAndUpdate(
+      { name: groupName },
+      { lastCleared: new Date() },
+      { upsert: true }
+    );
+
+    res.json({ message: `Cleared ${result.deletedCount} messages`, deletedCount: result.deletedCount });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -178,12 +401,21 @@ router.put('/messages/:id/read', auth, async (req, res) => {
 // @access  Private
 router.get('/unread', auth, async (req, res) => {
   try {
-    const count = await Message.countDocuments({
+    // Count 1-on-1 unread
+    const oneOnOneUnread = await Message.countDocuments({
       recipient: req.user.id,
-      read: false
+      read: false,
+      groupType: null
     });
 
-    res.json({ unreadCount: count });
+    // Count group unread (messages not read by current user)
+    const groupUnread = await Message.countDocuments({
+      groupType: { $ne: null },
+      sender: { $ne: req.user.id },
+      readBy: { $ne: req.user.id }
+    });
+
+    res.json({ unreadCount: oneOnOneUnread + groupUnread });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -209,5 +441,39 @@ router.get('/users', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+// Auto-clear function (should be called monthly via cron or scheduled task)
+router.post('/auto-clear-monthly', async (req, res) => {
+  try {
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // Clear all group chats that have auto-clear enabled
+    const groups = await ChatGroup.find({ autoClearEnabled: true });
+    let totalCleared = 0;
+
+    for (const group of groups) {
+      let query;
+      if (group.type === 'custom') {
+        query = { groupName: group.name };
+      } else {
+        query = { groupType: group.type };
+      }
+
+      const result = await Message.deleteMany({
+        ...query,
+        createdAt: { $lt: firstOfMonth }
+      });
+
+      totalCleared += result.deletedCount;
+      group.lastCleared = new Date();
+      await group.save();
+    }
+
+    res.json({ message: `Auto-cleared ${totalCleared} messages`, clearedCount: totalCleared });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+module.exports = router;

@@ -10,12 +10,18 @@ const messageSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  // For group chats
-  groupChat: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'GroupChat'
+  // Group chat type: 'main', 'parade', 'training', 'callout', or custom group name
+  groupType: {
+    type: String,
+    enum: ['main', 'parade', 'training', 'callout', 'custom'],
+    default: null
   },
-  // For group chats or broadcasts (legacy support)
+  // For custom groups, store the group name
+  groupName: {
+    type: String,
+    trim: true
+  },
+  // For group chats or broadcasts
   isBroadcast: {
     type: Boolean,
     default: false
@@ -55,47 +61,10 @@ const messageSchema = new mongoose.Schema({
 // Index for efficient queries
 messageSchema.index({ sender: 1, createdAt: -1 });
 messageSchema.index({ recipient: 1, read: 1, createdAt: -1 });
+messageSchema.index({ groupType: 1, createdAt: -1 });
+messageSchema.index({ groupName: 1, createdAt: -1 });
 messageSchema.index({ isBroadcast: 1, createdAt: -1 });
-messageSchema.index({ groupChat: 1, createdAt: -1 });
+messageSchema.index({ createdAt: -1 }); // For monthly clearing
 
-const groupChatSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  type: {
-    type: String,
-    enum: ['main', 'parade', 'training', 'callout', 'custom'],
-    default: 'custom'
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  members: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  lastClearedAt: {
-    type: Date,
-    default: Date.now
-  }
-}, {
-  timestamps: true
-});
-
-// Index for efficient queries
-groupChatSchema.index({ type: 1 });
-groupChatSchema.index({ members: 1 });
-
-module.exports = {
-  Message: mongoose.model('Message', messageSchema),
-  GroupChat: mongoose.model('GroupChat', groupChatSchema)
-};
+module.exports = mongoose.model('Message', messageSchema);
 
