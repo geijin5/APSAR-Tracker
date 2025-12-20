@@ -12,6 +12,8 @@ import Users from './pages/Users'
 import Quotes from './pages/Quotes'
 import Checklists from './pages/Checklists'
 import Appointments from './pages/Appointments'
+import Certificates from './pages/Certificates'
+import Chat from './pages/Chat'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -45,6 +47,8 @@ function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="users" element={<Users />} />
         <Route path="quotes" element={<Quotes />} />
+        <Route path="certificates" element={<Certificates />} />
+        <Route path="chat" element={<Chat />} />
       </Route>
     </Routes>
   )

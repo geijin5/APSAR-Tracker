@@ -33,6 +33,8 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/work-order-templates', require('./routes/workOrderTemplates'));
 app.use('/api/maintenance-templates', require('./routes/maintenanceTemplates'));
 app.use('/api/completed-checklists', require('./routes/completedChecklists'));
+app.use('/api/certificates', require('./routes/certificates'));
+app.use('/api/chat', require('./routes/chat'));
 
 // Health check endpoint (must come before catch-all route)
 app.get('/api/health', (req, res) => {

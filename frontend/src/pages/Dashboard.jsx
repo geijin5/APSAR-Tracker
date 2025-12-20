@@ -44,6 +44,15 @@ export default function Dashboard() {
     }
   })
 
+  // Fetch expiring certificates
+  const { data: expiringCertificates } = useQuery({
+    queryKey: ['expiring-certificates'],
+    queryFn: async () => {
+      const response = await api.get('/certificates/stats/expiring');
+      return response.data || [];
+    }
+  })
+
   // Appointment mutations
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointmentData) => {
@@ -288,7 +297,7 @@ export default function Dashboard() {
 
       {/* Alerts */}
       {stats?.maintenance?.overdue > 0 && (
-        <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+        <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
           <div className="flex">
             <div className="flex-shrink-0">
               <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
@@ -300,6 +309,47 @@ export default function Dashboard() {
               <p className="mt-2 text-sm text-yellow-700">
                 Action required: Please review overdue maintenance items
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Certificate Expiration Alerts */}
+      {expiringCertificates && expiringCertificates.length > 0 && (
+        <div className="mb-8 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <ExclamationTriangleIcon className="h-5 w-5 text-orange-400" />
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-medium text-orange-800">
+                {expiringCertificates.length} Certificate{expiringCertificates.length > 1 ? 's' : ''} Expiring Soon
+              </h3>
+              <p className="mt-2 text-sm text-orange-700">
+                The following certificates will expire within 30 days:
+              </p>
+              <ul className="mt-2 space-y-1">
+                {expiringCertificates.slice(0, 5).map((cert) => {
+                  const expiryDate = new Date(cert.expiryDate);
+                  const daysUntil = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <li key={cert._id} className="text-sm text-orange-700">
+                      • {cert.name} - {cert.user?.firstName} {cert.user?.lastName} ({daysUntil} days)
+                    </li>
+                  );
+                })}
+                {expiringCertificates.length > 5 && (
+                  <li className="text-sm text-orange-700 font-medium">
+                    ...and {expiringCertificates.length - 5} more
+                  </li>
+                )}
+              </ul>
+              <a
+                href="/certificates?expiringSoon=true"
+                className="mt-3 inline-block text-sm font-medium text-orange-800 hover:text-orange-900 underline"
+              >
+                View all expiring certificates →
+              </a>
             </div>
           </div>
         </div>

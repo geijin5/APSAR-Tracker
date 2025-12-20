@@ -13,7 +13,9 @@ import {
   UsersIcon,
   DocumentTextIcon,
   CheckCircleIcon,
-  CalendarIcon
+  CalendarIcon,
+  ChatBubbleLeftRightIcon,
+  AcademicCapIcon
 } from '@heroicons/react/24/outline'
 
 export default function Layout() {
@@ -28,6 +30,16 @@ export default function Layout() {
     }
   })
 
+  // Fetch unread chat messages
+  const { data: unreadData } = useQuery({
+    queryKey: ['chat-unread'],
+    queryFn: async () => {
+      const response = await api.get('/chat/unread')
+      return response.data
+    },
+    refetchInterval: 30000 // Poll every 30 seconds
+  })
+
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Assets', href: '/assets', icon: CubeIcon },
@@ -35,6 +47,8 @@ export default function Layout() {
     { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon },
     { name: 'Appointments', href: '/appointments', icon: CalendarIcon },
     { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
+    { name: 'Certificates', href: '/certificates', icon: AcademicCapIcon },
+    { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, badge: unreadData?.unreadCount },
     { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },
     ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: UsersIcon }] : []),
@@ -64,7 +78,7 @@ export default function Layout() {
                   to={item.href}
                   end={item.href === '/'}
                   className={({ isActive }) =>
-                    `px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                    `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
                       isActive
                         ? 'bg-primary-50 text-primary-700'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -72,6 +86,11 @@ export default function Layout() {
                   }
                 >
                   {item.name}
+                  {item.badge && item.badge > 0 && (
+                    <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </nav>
@@ -81,7 +100,7 @@ export default function Layout() {
             <div className="flex items-center gap-3 text-sm">
               <div className="text-right">
                 <p className="font-medium text-gray-900">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role} • {user?.unit}</p>
+                <p className="text-xs text-gray-500 capitalize">{user?.role}{user?.unit ? ` • ${user.unit}` : ''}</p>
               </div>
               <div className="h-8 w-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
@@ -119,12 +138,17 @@ export default function Layout() {
                 >
                   {({ isActive }) => (
                     <>
-                                                                  <item.icon
-                         className={`${
-                           isActive ? 'text-primary-600' : 'text-gray-400'
-                         } mr-3 flex-shrink-0 h-5 w-5`}
-                       />
-                      {item.name}
+                      <item.icon
+                        className={`${
+                          isActive ? 'text-primary-600' : 'text-gray-400'
+                        } mr-3 flex-shrink-0 h-5 w-5`}
+                      />
+                      <span className="flex-1">{item.name}</span>
+                      {item.badge && item.badge > 0 && (
+                        <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
                     </>
                   )}
                 </NavLink>
