@@ -44,12 +44,14 @@ export default function Layout() {
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Assets', href: '/assets', icon: CubeIcon },
     { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
-    { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon },
-    { name: 'Appointments', href: '/appointments', icon: CalendarIcon },
+    // Maintenance Group
+    { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon, group: 'maintenance' },
+    { name: 'Appointments', href: '/appointments', icon: CalendarIcon, group: 'maintenance' },
+    { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon, group: 'maintenance' },
+    // Other items
     { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
     { name: 'Certificates', href: '/certificates', icon: AcademicCapIcon },
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, badge: unreadData?.unreadCount },
-    { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },
     ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: UsersIcon }] : []),
   ]
@@ -72,27 +74,32 @@ export default function Layout() {
               </div>
             </div>
             <nav className="hidden md:flex items-center gap-1">
-              {navigation.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.href}
-                  end={item.href === '/'}
-                  className={({ isActive }) =>
-                    `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
-                      isActive
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`
-                  }
-                >
-                  {item.name}
-                  {item.badge && item.badge > 0 && (
-                    <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              ))}
+              {navigation.map((item, index) => {
+                // Skip maintenance group items in top nav (they're in sidebar)
+                if (item.group === 'maintenance') return null;
+                
+                return (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    end={item.href === '/'}
+                    className={({ isActive }) =>
+                      `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
+                        isActive
+                          ? 'bg-primary-50 text-primary-700'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    {item.name}
+                    {item.badge && item.badge > 0 && (
+                      <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
             </nav>
           </div>
           
@@ -123,36 +130,52 @@ export default function Layout() {
           
           <div className="mt-4 flex-1 flex flex-col px-3">
             <nav className="space-y-1">
-              {navigation.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.href}
-                  end={item.href === '/'}
-                                                        className={({ isActive }) =>
-                     `${
-                       isActive
-                         ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
-                         : 'text-gray-600 hover:bg-white hover:text-gray-900'
-                     } group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all`
-                   }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <item.icon
-                        className={`${
-                          isActive ? 'text-primary-600' : 'text-gray-400'
-                        } mr-3 flex-shrink-0 h-5 w-5`}
-                      />
-                      <span className="flex-1">{item.name}</span>
-                      {item.badge && item.badge > 0 && (
-                        <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                          {item.badge > 9 ? '9+' : item.badge}
-                        </span>
+              {navigation.map((item, index) => {
+                // Check if this is the first item in the maintenance group
+                const isFirstMaintenanceItem = item.group === 'maintenance' && 
+                  (index === 0 || navigation[index - 1]?.group !== 'maintenance');
+                
+                return (
+                  <div key={item.name}>
+                    {isFirstMaintenanceItem && (
+                      <div className="px-3 py-2 mb-1">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Maintenance
+                        </h3>
+                      </div>
+                    )}
+                    <NavLink
+                      to={item.href}
+                      end={item.href === '/'}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
+                            : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                        } group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                          item.group === 'maintenance' ? 'ml-3' : ''
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <item.icon
+                            className={`${
+                              isActive ? 'text-primary-600' : 'text-gray-400'
+                            } mr-3 flex-shrink-0 h-5 w-5`}
+                          />
+                          <span className="flex-1">{item.name}</span>
+                          {item.badge && item.badge > 0 && (
+                            <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                              {item.badge > 9 ? '9+' : item.badge}
+                            </span>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </NavLink>
-              ))}
+                    </NavLink>
+                  </div>
+                );
+              })}
             </nav>
             
                                       {/* Quick Stats Section */}

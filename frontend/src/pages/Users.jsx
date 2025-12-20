@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, UserCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UserCircleIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function Users() {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
@@ -26,6 +27,17 @@ export default function Users() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users']);
       setShowForm(false);
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ userId, data }) => {
+      const res = await api.put(`/auth/users/${userId}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      setEditingUser(null);
     }
   });
 
@@ -61,6 +73,26 @@ export default function Users() {
       role: formData.get('role')
     };
     createMutation.mutate(data);
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      username: formData.get('username'),
+      role: formData.get('role'),
+      isActive: formData.get('isActive') === 'true'
+    };
+    
+    // Only include password if provided
+    const password = formData.get('password');
+    if (password && password.trim()) {
+      data.password = password;
+    }
+
+    updateMutation.mutate({ userId: editingUser._id, data });
   };
 
   if (!user || user.role !== 'admin') {
@@ -159,14 +191,23 @@ export default function Users() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleDelete(u._id, `${u.firstName} ${u.lastName}`)}
-                      disabled={deleteMutation.isLoading || u._id === user.id}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={u._id === user.id ? "Cannot delete your own account" : "Delete user"}
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditingUser(u)}
+                        className="p-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Edit user"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(u._id, `${u.firstName} ${u.lastName}`)}
+                        disabled={deleteMutation.isLoading || u._id === user.id}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={u._id === user.id ? "Cannot delete your own account" : "Delete user"}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -174,6 +215,115 @@ export default function Users() {
           </table>
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <form onSubmit={handleEditSubmit}>
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Edit User</h2>
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      required
+                      defaultValue={editingUser.firstName}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      required
+                      defaultValue={editingUser.lastName}
+                      className="input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                  <input
+                    type="text"
+                    name="username"
+                    required
+                    minLength={3}
+                    maxLength={20}
+                    defaultValue={editingUser.username}
+                    className="input"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password (leave blank to keep current)</label>
+                  <input
+                    type="password"
+                    name="password"
+                    minLength={6}
+                    className="input"
+                    placeholder="Enter new password or leave blank"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                  <select name="role" required className="input" defaultValue={editingUser.role}>
+                    <option value="viewer">Viewer</option>
+                    <option value="operator">Operator</option>
+                    <option value="technician">Technician</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="isActive"
+                      value="true"
+                      defaultChecked={editingUser.isActive !== false}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Active Account</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateMutation.isLoading}
+                  className="btn-primary"
+                >
+                  {updateMutation.isLoading ? 'Updating...' : 'Update User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

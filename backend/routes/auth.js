@@ -144,6 +144,62 @@ router.get('/users', require('../middleware/auth').auth, require('../middleware/
   }
 });
 
+// @route   PUT /api/auth/users/:id
+// @desc    Update a user
+// @access  Private - Admin only
+router.put('/users/:id', require('../middleware/auth').auth, require('../middleware/auth').authorize('admin'), [
+  body('firstName').optional().notEmpty().trim().withMessage('First name cannot be empty'),
+  body('lastName').optional().notEmpty().trim().withMessage('Last name cannot be empty'),
+  body('username').optional().isLength({ min: 3, max: 20 }).trim().withMessage('Username must be 3-20 characters'),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role').optional().isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const userId = req.params.id;
+    const { firstName, lastName, username, password, role, isActive } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Check if username is being changed and if it's already taken
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ msg: 'Username already taken' });
+      }
+      user.username = username;
+    }
+
+    // Update fields
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (role !== undefined) user.role = role;
+    if (isActive !== undefined) user.isActive = isActive;
+    
+    // Update password if provided
+    if (password) {
+      user.password = password; // Will be hashed by pre-save hook
+    }
+
+    await user.save();
+
+    // Return user without password
+    const userResponse = await User.findById(user._id).select('-password');
+    res.json(userResponse);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 // @route   DELETE /api/auth/users/:id
 // @desc    Delete a user
 // @access  Private - Admin only
