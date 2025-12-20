@@ -458,7 +458,25 @@ export default function Chat() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages && messages.length > 0 ? (
                   messages.map((message) => {
-                    const isOwn = message.sender._id === user?.id || message.sender === user?.id;
+                    const isExternal = message.isExternal;
+                    const isOwn = !isExternal && (message.sender?._id === user?.id || message.sender === user?.id);
+                    const senderName = isExternal 
+                      ? message.externalSenderName 
+                      : (message.sender?.firstName && message.sender?.lastName 
+                          ? `${message.sender.firstName} ${message.sender.lastName}` 
+                          : 'Unknown');
+                    
+                    // Get source badge color
+                    const getSourceColor = (source) => {
+                      switch(source) {
+                        case 'dispatch': return 'bg-blue-600';
+                        case 'fire': return 'bg-red-600';
+                        case 'ems': return 'bg-green-600';
+                        case 'police': return 'bg-indigo-600';
+                        default: return 'bg-orange-600';
+                      }
+                    };
+
                     return (
                       <div
                         key={message._id}
@@ -466,17 +484,33 @@ export default function Chat() {
                       >
                         <div className={`max-w-md ${isOwn ? 'order-2' : 'order-1'}`}>
                           {!isOwn && (
-                            <p className="text-xs text-gray-500 mb-1 px-2">
-                              {message.sender.firstName} {message.sender.lastName}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1 px-2">
+                              <p className="text-xs text-gray-500">
+                                {senderName}
+                              </p>
+                              {isExternal && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full text-white font-semibold ${getSourceColor(message.externalSource)}`}>
+                                  {message.externalSource?.toUpperCase() || 'ADLC'}
+                                </span>
+                              )}
+                            </div>
                           )}
                           <div
                             className={`rounded-lg px-4 py-2 ${
                               isOwn
                                 ? 'bg-primary-600 text-white'
+                                : isExternal
+                                ? 'bg-orange-50 border-2 border-orange-300 text-gray-900'
                                 : 'bg-gray-100 text-gray-900'
                             }`}
                           >
+                            {isExternal && (
+                              <div className="mb-1 pb-1 border-b border-orange-200">
+                                <p className="text-xs font-semibold text-orange-700">
+                                  📡 External Message
+                                </p>
+                              </div>
+                            )}
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                             {message.attachments && message.attachments.length > 0 && (
                               <div className="mt-2 space-y-1">

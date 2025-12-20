@@ -4,7 +4,9 @@ const messageSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: function() {
+      return !this.isExternal; // Sender not required for external messages
+    }
   },
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
@@ -53,7 +55,28 @@ const messageSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  // External integration fields (for ADLC Emergency app)
+  isExternal: {
+    type: Boolean,
+    default: false
+  },
+  externalSource: {
+    type: String,
+    enum: ['adlc', 'dispatch', 'fire', 'ems', 'police', null],
+    default: null
+  },
+  externalSenderName: {
+    type: String,
+    trim: true
+  },
+  externalSenderId: {
+    type: String,
+    trim: true
+  },
+  externalMetadata: {
+    type: mongoose.Schema.Types.Mixed
+  }
 }, {
   timestamps: true
 });

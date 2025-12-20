@@ -52,6 +52,8 @@ export default function Layout() {
     { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
     { name: 'Certificates', href: '/certificates', icon: AcademicCapIcon },
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, badge: unreadData?.unreadCount },
+    { name: 'Callouts', href: '/callouts', icon: ClipboardDocumentListIcon },
+    { name: 'Callout Reports', href: '/callout-reports', icon: DocumentTextIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },
     ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: UsersIcon }] : []),
   ]

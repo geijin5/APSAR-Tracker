@@ -35,6 +35,9 @@ app.use('/api/maintenance-templates', require('./routes/maintenanceTemplates'));
 app.use('/api/completed-checklists', require('./routes/completedChecklists'));
 app.use('/api/certificates', require('./routes/certificates'));
 app.use('/api/chat', require('./routes/chat'));
+app.use('/api/adlc', require('./routes/adlcIntegration'));
+app.use('/api/callouts', require('./routes/callouts'));
+app.use('/api/callout-reports', require('./routes/calloutReports'));
 
 // Health check endpoint (must come before catch-all route)
 app.get('/api/health', (req, res) => {

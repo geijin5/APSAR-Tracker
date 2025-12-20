@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, XMarkIcon, TrashIcon, PrinterIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import Checklist from '../components/Checklist';
@@ -10,6 +10,7 @@ import { formatDate, getCurrentDate, getCurrentTime } from '../utils/dateUtils';
 export default function Maintenance() {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [showFormDropdown, setShowFormDropdown] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedMaintenanceTemplate, setSelectedMaintenanceTemplate] = useState('');
@@ -19,7 +20,25 @@ export default function Maintenance() {
     date: '',
     time: ''
   });
+  const dropdownRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowFormDropdown(false);
+      }
+    };
+
+    if (showFormDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFormDropdown]);
 
   // Auto-fill current date and time when form opens
   useEffect(() => {
@@ -191,13 +210,59 @@ export default function Maintenance() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Maintenance Records</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-        >
-          <PlusIcon className="h-5 w-5" />
-          New Maintenance Record
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowFormDropdown(!showFormDropdown)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            <PlusIcon className="h-5 w-5" />
+            New Maintenance Record
+            <ChevronDownIcon className="h-4 w-4" />
+          </button>
+          
+          {showFormDropdown && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              <div className="py-2">
+                <button
+                  onClick={() => {
+                    setSelectedMaintenanceTemplate('');
+                    setShowForm(true);
+                    setShowFormDropdown(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="font-medium">Blank Form</div>
+                  <div className="text-xs text-gray-500">Start with empty form</div>
+                </button>
+                
+                {maintenanceTemplates && maintenanceTemplates.length > 0 && (
+                  <>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Templates
+                    </div>
+                    {maintenanceTemplates.map(template => (
+                      <button
+                        key={template._id}
+                        onClick={() => {
+                          handleMaintenanceTemplateChange(template._id);
+                          setShowForm(true);
+                          setShowFormDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="font-medium">{template.name}</div>
+                        <div className="text-xs text-gray-500 capitalize">
+                          {template.type} • {template.priority || 'medium'} priority
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {showForm && (
