@@ -264,11 +264,11 @@ export default function Chat() {
 
           <div className="flex-1 overflow-y-auto">
             {/* Group Chats Section */}
-            {groupConversations.length > 0 && (
-              <div className="mb-4">
-                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Group Chats</h3>
-                </div>
+            <div className="mb-4">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Group Chats</h3>
+              </div>
+              {groupConversations.length > 0 ? (
                 <div className="divide-y divide-gray-200">
                   {groupConversations.map((conversation) => {
                     const isSelected = selectedConversation?.type === 'group' && 
@@ -293,16 +293,18 @@ export default function Chat() {
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {getConversationDisplayName(conversation)}
                               </p>
-                              {conversation.latestMessage && (
+                              {conversation.latestMessage ? (
                                 <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                                   {format(new Date(conversation.latestMessage.createdAt), 'MMM d')}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
-                            {conversation.latestMessage && (
+                            {conversation.latestMessage ? (
                               <p className="text-xs text-gray-600 truncate">
-                                {conversation.latestMessage.sender.firstName}: {conversation.latestMessage.content}
+                                {conversation.latestMessage.sender?.firstName}: {conversation.latestMessage.content}
                               </p>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">No messages yet</p>
                             )}
                           </div>
                           {unreadCount > 0 && (
@@ -315,8 +317,12 @@ export default function Chat() {
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="px-4 py-8 text-center text-sm text-gray-500">
+                  {conversations ? 'No groups available' : 'Loading groups...'}
+                </div>
+              )}
+            </div>
 
             {/* 1-on-1 Conversations Section */}
             {oneOnOneConversations.length > 0 && (

@@ -185,8 +185,23 @@ router.get('/conversations', auth, async (req, res) => {
 
     const allConversations = [...oneOnOneConversations, ...groupConversations];
 
-    // Sort by latest message time
+    // Sort by latest message time, but prioritize groups without messages
+    // Groups should always be visible even if they have no messages
     allConversations.sort((a, b) => {
+      // If both are groups, sort by type priority (main, parade, training, callout, then custom)
+      if (a.type === 'group' && b.type === 'group') {
+        const typeOrder = { main: 1, parade: 2, training: 3, callout: 4, custom: 5 };
+        const aOrder = typeOrder[a.group?.type] || 99;
+        const bOrder = typeOrder[b.group?.type] || 99;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+      }
+      
+      // If one is a group and one is user, groups come first
+      if (a.type === 'group' && b.type === 'user') return -1;
+      if (a.type === 'user' && b.type === 'group') return 1;
+      
+      // Within same type, sort by latest message time
+      if (!a.latestMessage && !b.latestMessage) return 0;
       if (!a.latestMessage) return 1;
       if (!b.latestMessage) return -1;
       return b.latestMessage.createdAt - a.latestMessage.createdAt;
