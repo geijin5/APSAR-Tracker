@@ -1,4 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
@@ -15,11 +16,17 @@ import {
   CheckCircleIcon,
   CalendarIcon,
   ChatBubbleLeftRightIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline'
 
 export default function Layout() {
   const { user, logout } = useAuth()
+  const location = useLocation()
+  const [maintenanceDropdownOpen, setMaintenanceDropdownOpen] = useState(false)
+  const [maintenanceDropdownOpenSidebar, setMaintenanceDropdownOpenSidebar] = useState(false)
+  const maintenanceDropdownRef = useRef(null)
+  const maintenanceDropdownRefSidebar = useRef(null)
 
   // Fetch dashboard stats for quick status
   const { data: stats } = useQuery({
@@ -40,14 +47,47 @@ export default function Layout() {
     refetchInterval: 30000 // Poll every 30 seconds
   })
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (maintenanceDropdownRef.current && !maintenanceDropdownRef.current.contains(event.target)) {
+        setMaintenanceDropdownOpen(false)
+      }
+      if (maintenanceDropdownRefSidebar.current && !maintenanceDropdownRefSidebar.current.contains(event.target)) {
+        setMaintenanceDropdownOpenSidebar(false)
+      }
+    }
+
+    if (maintenanceDropdownOpen || maintenanceDropdownOpenSidebar) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [maintenanceDropdownOpen, maintenanceDropdownOpenSidebar])
+
+  // Close dropdowns when route changes
+  useEffect(() => {
+    setMaintenanceDropdownOpen(false)
+    setMaintenanceDropdownOpenSidebar(false)
+  }, [location.pathname])
+
+  // Maintenance submenu items
+  const maintenanceItems = [
+    { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
+    { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon },
+    { name: 'Appointments', href: '/appointments', icon: CalendarIcon },
+    { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon },
+  ]
+
+  // Check if current route is a maintenance route
+  const isMaintenanceRoute = maintenanceItems.some(item => location.pathname === item.href || location.pathname.startsWith(item.href + '/'))
+
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Assets', href: '/assets', icon: CubeIcon },
-    { name: 'Maintenance', href: '/maintenance', icon: WrenchScrewdriverIcon },
-    // Maintenance Group
-    { name: 'Work Orders', href: '/work-orders', icon: ClipboardDocumentListIcon, group: 'maintenance' },
-    { name: 'Appointments', href: '/appointments', icon: CalendarIcon, group: 'maintenance' },
-    { name: 'Quotes', href: '/quotes', icon: DocumentTextIcon, group: 'maintenance' },
+    // Maintenance will be rendered as dropdown
     // Other items
     { name: 'Checklists', href: '/checklists', icon: CheckCircleIcon },
     { name: 'Certificates', href: '/certificates', icon: AcademicCapIcon },
@@ -76,32 +116,65 @@ export default function Layout() {
               </div>
             </div>
             <nav className="hidden md:flex items-center gap-1">
-              {navigation.map((item, index) => {
-                // Skip maintenance group items in top nav (they're in sidebar)
-                if (item.group === 'maintenance') return null;
+              {navigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  end={item.href === '/'}
+                  className={({ isActive }) =>
+                    `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  {item.name}
+                  {item.badge && item.badge > 0 && (
+                    <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+              
+              {/* Maintenance Dropdown */}
+              <div className="relative" ref={maintenanceDropdownRef}>
+                <button
+                  onClick={() => setMaintenanceDropdownOpen(!maintenanceDropdownOpen)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
+                    isMaintenanceRoute
+                      ? 'bg-primary-50 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  Maintenance
+                  <ChevronDownIcon className={`h-4 w-4 transition-transform ${maintenanceDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
                 
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    end={item.href === '/'}
-                    className={({ isActive }) =>
-                      `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
-                        isActive
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`
-                    }
-                  >
-                    {item.name}
-                    {item.badge && item.badge > 0 && (
-                      <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                        {item.badge > 9 ? '9+' : item.badge}
-                      </span>
-                    )}
-                  </NavLink>
-                );
-              })}
+                {maintenanceDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                    {maintenanceItems.map((item) => {
+                      const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                      return (
+                        <NavLink
+                          key={item.name}
+                          to={item.href}
+                          className={`flex items-center gap-2 px-4 py-2 text-sm ${
+                            isActive
+                              ? 'bg-primary-50 text-primary-700 font-medium'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setMaintenanceDropdownOpen(false)}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.name}
+                        </NavLink>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
           
@@ -132,52 +205,83 @@ export default function Layout() {
           
           <div className="mt-4 flex-1 flex flex-col px-3">
             <nav className="space-y-1">
-              {navigation.map((item, index) => {
-                // Check if this is the first item in the maintenance group
-                const isFirstMaintenanceItem = item.group === 'maintenance' && 
-                  (index === 0 || navigation[index - 1]?.group !== 'maintenance');
+              {navigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  end={item.href === '/'}
+                  className={({ isActive }) =>
+                    `${
+                      isActive
+                        ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
+                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                    } group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <item.icon
+                        className={`${
+                          isActive ? 'text-primary-600' : 'text-gray-400'
+                        } mr-3 flex-shrink-0 h-5 w-5`}
+                      />
+                      <span className="flex-1">{item.name}</span>
+                      {item.badge && item.badge > 0 && (
+                        <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+              
+              {/* Maintenance Dropdown */}
+              <div className="relative" ref={maintenanceDropdownRefSidebar}>
+                <button
+                  onClick={() => setMaintenanceDropdownOpenSidebar(!maintenanceDropdownOpenSidebar)}
+                  className={`w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                    isMaintenanceRoute
+                      ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                  }`}
+                >
+                  <WrenchScrewdriverIcon
+                    className={`${
+                      isMaintenanceRoute ? 'text-primary-600' : 'text-gray-400'
+                    } mr-3 flex-shrink-0 h-5 w-5`}
+                  />
+                  <span className="flex-1 text-left">Maintenance</span>
+                  <ChevronDownIcon className={`h-4 w-4 transition-transform ${maintenanceDropdownOpenSidebar ? 'rotate-180' : ''}`} />
+                </button>
                 
-                return (
-                  <div key={item.name}>
-                    {isFirstMaintenanceItem && (
-                      <div className="px-3 py-2 mb-1">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                          Maintenance
-                        </h3>
-                      </div>
-                    )}
-                    <NavLink
-                      to={item.href}
-                      end={item.href === '/'}
-                      className={({ isActive }) =>
-                        `${
-                          isActive
-                            ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
-                            : 'text-gray-600 hover:bg-white hover:text-gray-900'
-                        } group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                          item.group === 'maintenance' ? 'ml-3' : ''
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
+                {maintenanceDropdownOpenSidebar && (
+                  <div className="ml-3 mt-1 space-y-1">
+                    {maintenanceItems.map((item) => {
+                      const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                      return (
+                        <NavLink
+                          key={item.name}
+                          to={item.href}
+                          className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                            isActive
+                              ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
+                              : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                          }`}
+                          onClick={() => setMaintenanceDropdownOpenSidebar(false)}
+                        >
                           <item.icon
                             className={`${
                               isActive ? 'text-primary-600' : 'text-gray-400'
                             } mr-3 flex-shrink-0 h-5 w-5`}
                           />
                           <span className="flex-1">{item.name}</span>
-                          {item.badge && item.badge > 0 && (
-                            <span className="bg-primary-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
-                              {item.badge > 9 ? '9+' : item.badge}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
+                        </NavLink>
+                      )
+                    })}
                   </div>
-                );
-              })}
+                )}
+              </div>
             </nav>
             
                                       {/* Quick Stats Section */}
