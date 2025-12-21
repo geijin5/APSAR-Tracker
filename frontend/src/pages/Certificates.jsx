@@ -136,11 +136,11 @@ export default function Certificates() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[400px]">Loading certificates...</div>;
+    return <div className="flex items-center justify-center min-h-[400px] text-gray-900 dark:text-gray-100">Loading certificates...</div>;
   }
 
   if (error) {
-    return <div className="text-red-600">Error loading certificates: {error.message}</div>;
+    return <div className="text-red-600 dark:text-red-400">Error loading certificates: {error.message}</div>;
   }
 
   // Filter certificates by user if not admin/operator/trainer
@@ -149,11 +149,11 @@ export default function Certificates() {
     : (certificates || []).filter(cert => cert.user?._id === user?.id || cert.user === user?.id);
 
   return (
-    <div>
+    <div className="dark:text-gray-100">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Training Certificates</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and track training certificate expirations</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Training Certificates</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track training certificate expirations</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
@@ -166,10 +166,10 @@ export default function Certificates() {
 
       {/* Filters */}
       <div className="card mb-6">
-        <h3 className="text-lg font-semibold mb-4">Filters</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -187,9 +187,9 @@ export default function Certificates() {
                 type="checkbox"
                 checked={filters.expiringSoon}
                 onChange={(e) => setFilters({ ...filters, expiringSoon: e.target.checked })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
               />
-              <span className="text-sm text-gray-700">Expiring Soon (30 days)</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Expiring Soon (30 days)</span>
             </label>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function Certificates() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             {certificate.name}
                           </h3>
                           {['admin', 'operator', 'trainer'].includes(user?.role) && (
@@ -229,7 +229,7 @@ export default function Certificates() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
                         <div className="flex items-center gap-1">
                           <DocumentTextIcon className="h-4 w-4" />
                           <span>{certificate.issuingAuthority}</span>
@@ -245,7 +245,7 @@ export default function Certificates() {
                         </div>
                         <div className="flex items-center gap-1">
                           <ClockIcon className="h-4 w-4" />
-                          <span className={isExpired ? 'text-red-600 font-semibold' : isExpiringSoon ? 'text-yellow-600 font-semibold' : ''}>
+                          <span className={isExpired ? 'text-red-600 dark:text-red-400 font-semibold' : isExpiringSoon ? 'text-yellow-600 dark:text-yellow-400 font-semibold' : ''}>
                             {isExpired 
                               ? `Expired ${Math.abs(daysUntilExpiry)} days ago`
                               : `Expires in ${daysUntilExpiry} days`
@@ -255,7 +255,7 @@ export default function Certificates() {
                       </div>
 
                       {certificate.notes && (
-                        <p className="text-sm text-gray-600 mb-2">{certificate.notes}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{certificate.notes}</p>
                       )}
                     </div>
                   </div>
@@ -305,9 +305,9 @@ export default function Certificates() {
           })
         ) : (
           <div className="card text-center py-12">
-            <DocumentTextIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No certificates found</h3>
-            <p className="text-gray-500 mb-4">Upload your first training certificate to get started.</p>
+            <DocumentTextIcon className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No certificates found</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Upload your first training certificate to get started.</p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="btn-primary"
@@ -321,14 +321,14 @@ export default function Certificates() {
       {/* Create Certificate Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleCreateSubmit}>
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Add Certificate</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Add Certificate</h2>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   ×
                 </button>
@@ -350,7 +350,7 @@ export default function Certificates() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certificate Name *</label>
                   <input
                     type="text"
                     name="name"
@@ -362,7 +362,7 @@ export default function Certificates() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Authority *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issuing Authority *</label>
                     <input
                       type="text"
                       name="issuingAuthority"
@@ -372,7 +372,7 @@ export default function Certificates() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Number</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certificate Number</label>
                     <input
                       type="text"
                       name="certificateNumber"
@@ -384,7 +384,7 @@ export default function Certificates() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Issued Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issued Date *</label>
                     <input
                       type="date"
                       name="issuedDate"
@@ -393,7 +393,7 @@ export default function Certificates() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry Date *</label>
                     <input
                       type="date"
                       name="expiryDate"
@@ -404,7 +404,7 @@ export default function Certificates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Certificate File</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certificate File</label>
                   <input
                     type="file"
                     name="file"
@@ -415,7 +415,7 @@ export default function Certificates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                   <textarea
                     name="notes"
                     rows={3}
@@ -425,7 +425,7 @@ export default function Certificates() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
@@ -449,10 +449,10 @@ export default function Certificates() {
       {/* Edit Certificate Modal */}
       {editingCertificate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleEditSubmit}>
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Edit Certificate</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit Certificate</h2>
                 <button
                   type="button"
                   onClick={() => setEditingCertificate(null)}
@@ -476,7 +476,7 @@ export default function Certificates() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Authority *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issuing Authority *</label>
                     <input
                       type="text"
                       name="issuingAuthority"
@@ -486,7 +486,7 @@ export default function Certificates() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Number</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certificate Number</label>
                     <input
                       type="text"
                       name="certificateNumber"
@@ -498,7 +498,7 @@ export default function Certificates() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Issued Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issued Date *</label>
                     <input
                       type="date"
                       name="issuedDate"
@@ -508,7 +508,7 @@ export default function Certificates() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry Date *</label>
                     <input
                       type="date"
                       name="expiryDate"
@@ -520,7 +520,7 @@ export default function Certificates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Update Certificate File (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Update Certificate File (optional)</label>
                   <input
                     type="file"
                     name="file"
@@ -535,7 +535,7 @@ export default function Certificates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                   <textarea
                     name="notes"
                     rows={3}
@@ -545,7 +545,7 @@ export default function Certificates() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setEditingCertificate(null)}

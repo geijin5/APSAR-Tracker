@@ -98,20 +98,20 @@ export default function Users() {
   if (!user || user.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">You don't have permission to access this page.</p>
+        <p className="text-gray-500 dark:text-gray-400">You don't have permission to access this page.</p>
       </div>
     );
   }
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div className="text-gray-900 dark:text-gray-100">Loading...</div>;
 
   return (
-    <div>
+    <div className="dark:text-gray-100">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">User Management</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800"
         >
           <PlusIcon className="h-5 w-5" />
           Add User
@@ -120,28 +120,28 @@ export default function Users() {
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-xl font-semibold mb-4">Create New User</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Create New User</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
                 <input type="text" name="firstName" required className="input" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
                 <input type="text" name="lastName" required className="input" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
               <input type="text" name="username" required minLength={3} maxLength={20} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
               <input type="password" name="password" required minLength={6} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
               <select name="role" required className="input">
                 <option value="viewer">Viewer</option>
                 <option value="operator">Operator</option>
@@ -164,30 +164,30 @@ export default function Users() {
 
       <div className="card">
         <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {users?.map((u) => (
-                <tr key={u._id} className="hover:bg-gray-50">
+                <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <UserCircleIcon className="h-8 w-8 text-gray-400 mr-3" />
+                      <UserCircleIcon className="h-8 w-8 text-gray-400 dark:text-gray-500 mr-3" />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{u.firstName} {u.lastName}</div>
-                        <div className="text-sm text-gray-500">@{u.username}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{u.firstName} {u.lastName}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">@{u.username}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.username}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.username}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800 capitalize">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 capitalize">
                       {u.role}
                     </span>
                   </td>
@@ -195,7 +195,7 @@ export default function Users() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setEditingUser(u)}
-                        className="p-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="p-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
                         title="Edit user"
                       >
                         <PencilIcon className="h-5 w-5" />
@@ -203,7 +203,7 @@ export default function Users() {
                       <button
                         onClick={() => handleDelete(u._id, `${u.firstName} ${u.lastName}`)}
                         disabled={deleteMutation.isLoading || u._id === user.id}
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={u._id === user.id ? "Cannot delete your own account" : "Delete user"}
                       >
                         <TrashIcon className="h-5 w-5" />
@@ -220,14 +220,14 @@ export default function Users() {
       {/* Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
             <form onSubmit={handleEditSubmit}>
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Edit User</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit User</h2>
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   ×
                 </button>
@@ -236,7 +236,7 @@ export default function Users() {
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name *</label>
                     <input
                       type="text"
                       name="firstName"
@@ -300,12 +300,12 @@ export default function Users() {
                       defaultChecked={editingUser.isActive !== false}
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-700">Active Account</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Active Account</span>
                   </label>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}

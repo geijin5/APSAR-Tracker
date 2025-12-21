@@ -252,7 +252,7 @@ export default function Chat() {
     <div className="h-[calc(100vh-8rem)] flex flex-col">
       <div className="mb-4 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
           <p className="text-sm text-gray-500 mt-1">Chat with team members and groups</p>
         </div>
         <button
@@ -264,11 +264,11 @@ export default function Chat() {
         </button>
       </div>
 
-      <div className="flex-1 flex gap-4 bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="flex-1 flex gap-4 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         {/* Conversations Sidebar */}
         <div className="w-80 border-r border-gray-200 flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Conversations</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Conversations</h2>
             {unreadCount > 0 && (
               <p className="text-xs text-primary-600 mt-1">{unreadCount} unread message{unreadCount !== 1 ? 's' : ''}</p>
             )}
@@ -302,7 +302,7 @@ export default function Chat() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                 {getConversationDisplayName(conversation)}
                               </p>
                               {conversation.latestMessage ? (
@@ -362,7 +362,7 @@ export default function Chat() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                 {getConversationDisplayName(conversation)}
                               </p>
                               {conversation.latestMessage && (
@@ -400,7 +400,7 @@ export default function Chat() {
             {/* New Chat Section */}
             {users && users.length > 0 && (
               <div className="border-t border-gray-200 p-4 mt-auto">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Start New Chat</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Start New Chat</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {users
                     .filter(u => !oneOnOneConversations.some(c => c.user?._id === u._id))
@@ -413,7 +413,7 @@ export default function Chat() {
                         <div className="h-8 w-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                           {otherUser.firstName?.[0]}{otherUser.lastName?.[0]}
                         </div>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
                           {otherUser.firstName} {otherUser.lastName}
                         </span>
                       </button>
@@ -437,7 +437,7 @@ export default function Chat() {
                         <UserGroupIcon className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                           {getConversationDisplayName(selectedConversation)}
                         </h3>
                         {selectedConversation.group?.description && (
@@ -451,7 +451,7 @@ export default function Chat() {
                         {selectedConversation.user.firstName?.[0]}{selectedConversation.user.lastName?.[0]}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                           {getConversationDisplayName(selectedConversation)}
                         </h3>
                         <p className="text-xs text-gray-500 capitalize">{selectedConversation.user.role}</p>
@@ -518,8 +518,8 @@ export default function Chat() {
                               isOwn
                                 ? 'bg-primary-600 text-white'
                                 : isExternal
-                                ? 'bg-orange-50 border-2 border-orange-300 text-gray-900'
-                                : 'bg-gray-100 text-gray-900'
+                                ? 'bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-600 text-gray-900 dark:text-gray-100'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                             }`}
                           >
                             {isExternal && (
@@ -572,7 +572,7 @@ export default function Chat() {
                         key={idx}
                         className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded text-xs"
                       >
-                        <span className="text-gray-700">{file.name}</span>
+                        <span className="text-gray-700 dark:text-gray-300">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeAttachment(idx)}
@@ -632,10 +632,10 @@ export default function Chat() {
       {/* Create Group Modal */}
       {showCreateGroup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
             <form onSubmit={handleCreateGroup}>
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Create New Group</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Group</h2>
                 <button
                   type="button"
                   onClick={() => setShowCreateGroup(false)}
@@ -647,7 +647,7 @@ export default function Chat() {
 
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Group Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name *</label>
                   <input
                     type="text"
                     name="name"
@@ -658,7 +658,7 @@ export default function Chat() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                   <textarea
                     name="description"
                     rows={2}
@@ -668,7 +668,7 @@ export default function Chat() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Add Members</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Add Members</label>
                   <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
                     {users && users.length > 0 ? (
                       users.map((u) => (
@@ -679,7 +679,7 @@ export default function Chat() {
                             value={u._id}
                             className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                           />
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {u.firstName} {u.lastName}
                           </span>
                         </label>

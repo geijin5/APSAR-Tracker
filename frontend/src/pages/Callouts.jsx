@@ -167,7 +167,7 @@ export default function Callouts() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Callouts</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Callouts</h1>
           <p className="text-sm text-gray-500 mt-1">Track and manage search and rescue callouts</p>
         </div>
         {['admin', 'operator', 'trainer'].includes(user?.role) && (
@@ -186,7 +186,7 @@ export default function Callouts() {
         <h3 className="text-lg font-semibold mb-4">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -199,7 +199,7 @@ export default function Callouts() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -230,7 +230,7 @@ export default function Callouts() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                           {callout.title}
                         </h3>
                         <p className="text-sm text-gray-500">{callout.calloutNumber}</p>
@@ -335,7 +335,7 @@ export default function Callouts() {
         ) : (
           <div className="card text-center py-12">
             <ClipboardDocumentListIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No callouts found</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No callouts found</h3>
             <p className="text-gray-500">Callouts will appear here once created.</p>
           </div>
         )}
@@ -344,10 +344,10 @@ export default function Callouts() {
       {/* Create Callout Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleCreateSubmit}>
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Create New Callout</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Callout</h2>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
@@ -359,7 +359,7 @@ export default function Callouts() {
 
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
                   <input
                     type="text"
                     name="title"
@@ -371,7 +371,7 @@ export default function Callouts() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</label>
                     <select name="type" required className="input">
                       <option value="search">Search</option>
                       <option value="rescue">Rescue</option>
@@ -382,7 +382,7 @@ export default function Callouts() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                     <select name="status" className="input" defaultValue="active">
                       <option value="active">Active</option>
                       <option value="completed">Completed</option>
@@ -393,7 +393,7 @@ export default function Callouts() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date & Time *</label>
                     <input
                       type="datetime-local"
                       name="startDate"
@@ -402,7 +402,7 @@ export default function Callouts() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date & Time</label>
                     <input
                       type="datetime-local"
                       name="endDate"
@@ -412,7 +412,7 @@ export default function Callouts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location Address</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Address</label>
                   <input
                     type="text"
                     name="locationAddress"
@@ -422,7 +422,7 @@ export default function Callouts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Description</label>
                   <textarea
                     name="locationDescription"
                     rows={2}
@@ -432,7 +432,7 @@ export default function Callouts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Incident Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Incident Description</label>
                   <textarea
                     name="incidentDescription"
                     rows={4}
@@ -442,7 +442,7 @@ export default function Callouts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Requesting Agency</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requesting Agency</label>
                   <input
                     type="text"
                     name="requestingAgency"
@@ -453,7 +453,7 @@ export default function Callouts() {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Name</label>
                     <input
                       type="text"
                       name="contactName"
@@ -461,7 +461,7 @@ export default function Callouts() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
                     <input
                       type="text"
                       name="contactPhone"
@@ -469,7 +469,7 @@ export default function Callouts() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Agency</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Agency</label>
                     <input
                       type="text"
                       name="contactAgency"
@@ -479,7 +479,7 @@ export default function Callouts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Attachments</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachments</label>
                   <input
                     type="file"
                     name="attachments"

@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [isAllDay, setIsAllDay] = useState(false);
   const [checklistCompletion, setChecklistCompletion] = useState(null);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
+  const [showSectionManager, setShowSectionManager] = useState(false);
   const [dashboardLayout, setDashboardLayout] = useState(() => {
     const saved = localStorage.getItem(`dashboard-layout-${user?.id}`);
     return saved ? JSON.parse(saved) : null;
@@ -256,7 +257,7 @@ export default function Dashboard() {
   const canCustomizeLayout = ['admin', 'operator', 'technician', 'trainer'].includes(user?.role);
   const isMember = user?.role === 'viewer';
 
-  // Default layout order
+  // Default layout order - all available sections
   const defaultLayout = [
     'stats',
     'alerts',
@@ -266,6 +267,17 @@ export default function Dashboard() {
     'expiringCertifications',
     'recentActivity'
   ];
+
+  // Section metadata for display
+  const sectionMetadata = {
+    stats: { name: 'Statistics', description: 'Asset and maintenance statistics' },
+    alerts: { name: 'Alerts', description: 'Overdue maintenance and expiring certificates' },
+    upcomingMaintenance: { name: 'Upcoming Maintenance', description: 'Scheduled maintenance tasks' },
+    quickChecklists: { name: 'Quick Checklists', description: 'Quick access to checklist templates' },
+    calendar: { name: 'Calendar', description: 'Upcoming events and appointments' },
+    expiringCertifications: { name: 'Expiring Certifications', description: 'Certificates expiring soon' },
+    recentActivity: { name: 'Recent Activity', description: 'Latest maintenance activities' }
+  };
 
   // Initialize layout from localStorage or use default
   useEffect(() => {
@@ -307,8 +319,28 @@ export default function Dashboard() {
     setDraggedItem(null);
   };
 
+  // Toggle section visibility
+  const toggleSection = (sectionKey) => {
+    const current = dashboardLayout || defaultLayout;
+    if (current.includes(sectionKey)) {
+      // Remove section
+      setDashboardLayout(current.filter(key => key !== sectionKey));
+    } else {
+      // Add section at the end
+      setDashboardLayout([...current, sectionKey]);
+    }
+  };
+
+  // Reset to default layout
+  const resetLayout = () => {
+    setDashboardLayout(defaultLayout);
+  };
+
   // Get current layout order
   const currentLayout = dashboardLayout || defaultLayout;
+  
+  // Get available sections (all sections that can be added)
+  const availableSections = defaultLayout;
 
   if (isLoading) {
     return <div className="text-gray-900 dark:text-gray-100">Loading...</div>
@@ -740,13 +772,22 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
         {canCustomizeLayout && (
-          <button
-            onClick={() => setIsEditingLayout(!isEditingLayout)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors"
-          >
-            <Bars3Icon className="h-5 w-5" />
-            {isEditingLayout ? 'Done Editing' : 'Edit Layout'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSectionManager(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-colors"
+            >
+              <Bars3Icon className="h-5 w-5" />
+              Manage Sections
+            </button>
+            <button
+              onClick={() => setIsEditingLayout(!isEditingLayout)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors"
+            >
+              <Bars3Icon className="h-5 w-5" />
+              {isEditingLayout ? 'Done Editing' : 'Edit Layout'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -771,11 +812,23 @@ export default function Dashboard() {
                     : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 dark:hover:border-primary-600'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Bars3Icon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    {sectionKey.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Bars3Icon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      {sectionKey.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection(sectionKey);
+                    }}
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                    title="Remove section"
+                  >
+                    Remove
+                  </button>
                 </div>
                 {section}
               </div>
@@ -785,6 +838,81 @@ export default function Dashboard() {
           return <div key={sectionKey}>{section}</div>;
         })}
       </div>
+
+      {/* Section Manager Modal */}
+      {showSectionManager && canCustomizeLayout && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Manage Dashboard Sections</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Add or remove sections from your dashboard</p>
+              </div>
+              <button
+                onClick={() => setShowSectionManager(false)}
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4 flex justify-end">
+                <button
+                  onClick={resetLayout}
+                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {availableSections.map((sectionKey) => {
+                  const isVisible = currentLayout.includes(sectionKey);
+                  const metadata = sectionMetadata[sectionKey] || { name: sectionKey, description: '' };
+
+                  return (
+                    <div
+                      key={sectionKey}
+                      className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          {metadata.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {metadata.description}
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer ml-4">
+                        <input
+                          type="checkbox"
+                          checked={isVisible}
+                          onChange={() => toggleSection(sectionKey)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600 dark:peer-checked:bg-primary-600"></div>
+                        <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {isVisible ? 'Visible' : 'Hidden'}
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowSectionManager(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Active Checklist Modal */}
       {selectedChecklist && (

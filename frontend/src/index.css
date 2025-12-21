@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-200 text-gray-900;
+    @apply bg-gray-200 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
     font-family: 'Inter', system-ui, sans-serif;
   }
   
@@ -25,7 +25,7 @@
   }
   
   .btn-secondary {
-    @apply btn text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+    @apply btn text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-primary-500;
   }
   
   .btn-accent {
@@ -33,23 +33,23 @@
   }
   
   .input {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all;
+    @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all;
   }
   
   .card {
-    @apply bg-white shadow-md rounded-xl p-6 border border-gray-200;
+    @apply bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 border border-gray-200 dark:border-gray-700;
   }
   
   .card-hover {
-    @apply card transition-all hover:shadow-lg hover:border-primary-300;
+    @apply card transition-all hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600;
   }
   
   .stat-card {
-    @apply card bg-gradient-to-br from-white to-gray-200 border-l-4 border-primary-500;
+    @apply card bg-gradient-to-br from-white dark:from-gray-800 to-gray-200 dark:to-gray-700 border-l-4 border-primary-500;
   }
   
   .alert-warning {
-    @apply bg-warning-50 border-l-4 border-warning-500 text-warning-800 p-4 rounded-lg;
+    @apply bg-warning-50 dark:bg-warning-900/20 border-l-4 border-warning-500 dark:border-warning-400 text-warning-800 dark:text-warning-200 p-4 rounded-lg;
   }
   
   .badge {
@@ -57,18 +57,18 @@
   }
   
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-800;
+    @apply badge bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200;
   }
   
   .badge-success {
-    @apply badge bg-green-100 text-green-800;
+    @apply badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200;
   }
   
   .badge-warning {
-    @apply badge bg-warning-100 text-warning-800;
+    @apply badge bg-warning-100 dark:bg-warning-900/30 text-warning-800 dark:text-warning-200;
   }
   
   .badge-danger {
-    @apply badge bg-red-100 text-red-800;
+    @apply badge bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200;
   }
 }

@@ -109,10 +109,10 @@ export default function Layout() {
                 <SignalIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900 leading-tight">
-                  <span className="text-primary-600">APSAR</span> <span className="font-normal text-gray-600">Tracker</span>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                  <span className="text-primary-600 dark:text-primary-400">APSAR</span> <span className="font-normal text-gray-600 dark:text-gray-400">Tracker</span>
                 </h1>
-                <p className="text-xs text-gray-500 leading-none">Anaconda Pintler SAR</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-none">Anaconda Pintler SAR</p>
               </div>
             </div>
             <nav className="hidden md:flex items-center gap-1">
@@ -124,8 +124,8 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
                       isActive
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                     }`
                   }
                 >
@@ -144,8 +144,8 @@ export default function Layout() {
                   onClick={() => setMaintenanceDropdownOpen(!maintenanceDropdownOpen)}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
                     isMaintenanceRoute
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
                   Maintenance
@@ -153,7 +153,7 @@ export default function Layout() {
                 </button>
                 
                 {maintenanceDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-1">
                     {maintenanceItems.map((item) => {
                       const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
                       return (
@@ -162,8 +162,8 @@ export default function Layout() {
                           to={item.href}
                           className={`flex items-center gap-2 px-4 py-2 text-sm ${
                             isActive
-                              ? 'bg-primary-50 text-primary-700 font-medium'
-                              : 'text-gray-700 hover:bg-gray-50'
+                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                           }`}
                           onClick={() => setMaintenanceDropdownOpen(false)}
                         >
@@ -181,18 +181,18 @@ export default function Layout() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 text-sm">
               <div className="text-right">
-                <p className="font-medium text-gray-900">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role}{user?.unit ? ` • ${user.unit}` : ''}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}{user?.unit ? ` • ${user.unit}` : ''}</p>
               </div>
               <div className="h-8 w-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
             </div>
-                                      <button
-               onClick={logout}
-               className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-md transition-all"
-               title="Logout"
-             >
+            <button
+              onClick={logout}
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all"
+              title="Logout"
+            >
               <ArrowRightOnRectangleIcon className="h-5 w-5" />
             </button>
           </div>
@@ -213,8 +213,8 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `${
                       isActive
-                        ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
-                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                        ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border-l-4 border-primary-600 dark:border-primary-500'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                     } group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all`
                   }
                 >
@@ -222,7 +222,7 @@ export default function Layout() {
                     <>
                       <item.icon
                         className={`${
-                          isActive ? 'text-primary-600' : 'text-gray-400'
+                          isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'
                         } mr-3 flex-shrink-0 h-5 w-5`}
                       />
                       <span className="flex-1">{item.name}</span>
@@ -242,13 +242,13 @@ export default function Layout() {
                   onClick={() => setMaintenanceDropdownOpenSidebar(!maintenanceDropdownOpenSidebar)}
                   className={`w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
                     isMaintenanceRoute
-                      ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
-                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border-l-4 border-primary-600 dark:border-primary-500'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
                   <WrenchScrewdriverIcon
                     className={`${
-                      isMaintenanceRoute ? 'text-primary-600' : 'text-gray-400'
+                      isMaintenanceRoute ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'
                     } mr-3 flex-shrink-0 h-5 w-5`}
                   />
                   <span className="flex-1 text-left">Maintenance</span>
@@ -265,14 +265,14 @@ export default function Layout() {
                           to={item.href}
                           className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
                             isActive
-                              ? 'bg-white text-primary-600 shadow-sm border-l-4 border-primary-600'
-                              : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                              ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border-l-4 border-primary-600 dark:border-primary-500'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                           }`}
                           onClick={() => setMaintenanceDropdownOpenSidebar(false)}
                         >
                           <item.icon
                             className={`${
-                              isActive ? 'text-primary-600' : 'text-gray-400'
+                              isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'
                             } mr-3 flex-shrink-0 h-5 w-5`}
                           />
                           <span className="flex-1">{item.name}</span>
@@ -285,26 +285,26 @@ export default function Layout() {
             </nav>
             
                                       {/* Quick Stats Section */}
-             <div className="mt-6 p-3 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl border border-primary-200">
-               <h3 className="text-xs font-semibold text-primary-900 uppercase tracking-wider mb-3">
+             <div className="mt-6 p-3 bg-gradient-to-br from-primary-50 dark:from-primary-900/20 to-primary-100 dark:to-primary-800/20 rounded-xl border border-primary-200 dark:border-primary-800">
+               <h3 className="text-xs font-semibold text-primary-900 dark:text-primary-200 uppercase tracking-wider mb-3">
                  Quick Status
                </h3>
                <div className="space-y-2">
                  <div className="flex items-center justify-between text-xs">
-                   <span className="text-gray-600">Total Assets</span>
-                   <span className="font-semibold text-primary-700">{stats?.assets?.total || 0}</span>
+                   <span className="text-gray-600 dark:text-gray-400">Total Assets</span>
+                   <span className="font-semibold text-primary-700 dark:text-primary-300">{stats?.assets?.total || 0}</span>
                  </div>
                  <div className="flex items-center justify-between text-xs">
-                   <span className="text-gray-600">Operational</span>
-                   <span className="font-semibold text-green-600">{stats?.assets?.operational || 0}</span>
+                   <span className="text-gray-600 dark:text-gray-400">Operational</span>
+                   <span className="font-semibold text-green-600 dark:text-green-400">{stats?.assets?.operational || 0}</span>
                  </div>
                  <div className="flex items-center justify-between text-xs">
-                   <span className="text-gray-600">In Maintenance</span>
-                   <span className="font-semibold text-yellow-600">{stats?.assets?.maintenance || 0}</span>
+                   <span className="text-gray-600 dark:text-gray-400">In Maintenance</span>
+                   <span className="font-semibold text-yellow-600 dark:text-yellow-400">{stats?.assets?.maintenance || 0}</span>
                  </div>
                  <div className="flex items-center justify-between text-xs">
-                   <span className="text-gray-600">Open Work Orders</span>
-                   <span className="font-semibold text-orange-600">{stats?.workOrders?.open || 0}</span>
+                   <span className="text-gray-600 dark:text-gray-400">Open Work Orders</span>
+                   <span className="font-semibold text-orange-600 dark:text-orange-400">{stats?.workOrders?.open || 0}</span>
                  </div>
                </div>
              </div>
