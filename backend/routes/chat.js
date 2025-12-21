@@ -96,7 +96,13 @@ router.post('/groups', auth, async (req, res) => {
 // @access  Private
 router.get('/conversations', auth, async (req, res) => {
   try {
-    await initializeGroups();
+    // Initialize groups if they don't exist
+    try {
+      await initializeGroups();
+    } catch (initError) {
+      console.error('Error initializing groups:', initError);
+      // Continue anyway - groups might already exist
+    }
 
     // Get 1-on-1 conversations
     const sentMessages = await Message.find({ 
@@ -146,8 +152,20 @@ router.get('/conversations', auth, async (req, res) => {
       })
     );
 
-    // Get group conversations
-    const groups = await ChatGroup.find();
+    // Get group conversations - always return groups even if empty
+    let groups = await ChatGroup.find().lean();
+    
+    // If no groups exist, ensure at least the predefined ones are created
+    if (!groups || groups.length === 0) {
+      console.log('No groups found, initializing...');
+      try {
+        await initializeGroups();
+        groups = await ChatGroup.find().lean();
+      } catch (initError) {
+        console.error('Error initializing groups on second attempt:', initError);
+      }
+    }
+    
     const groupConversations = await Promise.all(
       groups.map(async (group) => {
         const latestMessage = await Message.findOne({

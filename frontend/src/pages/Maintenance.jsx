@@ -14,6 +14,7 @@ export default function Maintenance() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedMaintenanceTemplate, setSelectedMaintenanceTemplate] = useState('');
+  const [preselectedFormType, setPreselectedFormType] = useState('');
   const [checklist, setChecklist] = useState([]);
   const [createdByName, setCreatedByName] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState({
@@ -49,9 +50,16 @@ export default function Maintenance() {
       });
       // Reset name field when form opens
       setCreatedByName('');
-      setSelectedMaintenanceTemplate('');
+      
+      // Auto-select form type if preselected
+      if (preselectedFormType) {
+        const form = document.querySelector('form[data-maintenance-form]');
+        if (form && form.type) {
+          form.type.value = preselectedFormType;
+        }
+      }
     }
-  }, [showForm]);
+  }, [showForm, preselectedFormType]);
 
   const handleMaintenanceTemplateChange = (templateId) => {
     setSelectedMaintenanceTemplate(templateId);
@@ -221,10 +229,14 @@ export default function Maintenance() {
           </button>
           
           {showFormDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] max-h-96 overflow-y-auto">
+            <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] max-h-96 overflow-y-auto">
               <div className="py-2">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Maintenance Form Types
+                </div>
                 <button
                   onClick={() => {
+                    setPreselectedFormType('');
                     setSelectedMaintenanceTemplate('');
                     setShowForm(true);
                     setShowFormDropdown(false);
@@ -235,7 +247,29 @@ export default function Maintenance() {
                   <div className="text-xs text-gray-500">Start with empty form</div>
                 </button>
                 
-                {maintenanceTemplates && maintenanceTemplates.length > 0 ? (
+                {['preventive', 'corrective', 'inspection', 'calibration', 'certification'].map(formType => (
+                  <button
+                    key={formType}
+                    onClick={() => {
+                      setPreselectedFormType(formType);
+                      setSelectedMaintenanceTemplate('');
+                      setShowForm(true);
+                      setShowFormDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors capitalize"
+                  >
+                    <div className="font-medium">{formType.charAt(0).toUpperCase() + formType.slice(1)} Maintenance</div>
+                    <div className="text-xs text-gray-500">
+                      {formType === 'preventive' && 'Scheduled maintenance to prevent issues'}
+                      {formType === 'corrective' && 'Fix existing problems or defects'}
+                      {formType === 'inspection' && 'Regular inspection and verification'}
+                      {formType === 'calibration' && 'Equipment calibration and adjustment'}
+                      {formType === 'certification' && 'Certification and compliance checks'}
+                    </div>
+                  </button>
+                ))}
+                
+                {maintenanceTemplates && maintenanceTemplates.length > 0 && (
                   <>
                     <div className="border-t border-gray-200 my-1"></div>
                     <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -246,6 +280,7 @@ export default function Maintenance() {
                         key={template._id}
                         onClick={() => {
                           handleMaintenanceTemplateChange(template._id);
+                          setPreselectedFormType(template.type);
                           setShowForm(true);
                           setShowFormDropdown(false);
                         }}
@@ -257,13 +292,6 @@ export default function Maintenance() {
                         </div>
                       </button>
                     ))}
-                  </>
-                ) : (
-                  <>
-                    <div className="border-t border-gray-200 my-1"></div>
-                    <div className="px-4 py-2 text-xs text-gray-500">
-                      No templates available
-                    </div>
                   </>
                 )}
               </div>
@@ -308,11 +336,13 @@ export default function Maintenance() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select name="type" required className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <select name="type" required className="w-full border border-gray-300 rounded-lg px-3 py-2" defaultValue={preselectedFormType}>
+                  <option value="">Select type...</option>
                   <option value="preventive">Preventive</option>
                   <option value="corrective">Corrective</option>
                   <option value="inspection">Inspection</option>
                   <option value="calibration">Calibration</option>
+                  <option value="certification">Certification</option>
                 </select>
               </div>
             </div>

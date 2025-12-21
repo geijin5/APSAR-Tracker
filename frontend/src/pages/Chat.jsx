@@ -23,7 +23,7 @@ export default function Chat() {
   const queryClient = useQueryClient();
 
   // Fetch conversations (includes groups and 1-on-1)
-  const { data: conversations } = useQuery({
+  const { data: conversations, isLoading: isLoadingConversations, error: conversationsError } = useQuery({
     queryKey: ['chat-conversations'],
     queryFn: async () => {
       const response = await api.get('/chat/conversations');
@@ -233,7 +233,19 @@ export default function Chat() {
   const unreadCount = unreadData?.unreadCount || 0;
 
   // Separate conversations into groups and 1-on-1
-  const groupConversations = conversations?.filter(c => c.type === 'group') || [];
+  // Use groups query as fallback if conversations hasn't loaded yet
+  const groupConversations = conversations?.filter(c => c.type === 'group') || 
+    (groups?.map(g => ({
+      type: 'group',
+      group: {
+        _id: g._id,
+        name: g.name,
+        type: g.type,
+        description: g.description
+      },
+      latestMessage: null,
+      unreadCount: 0
+    })) || []);
   const oneOnOneConversations = conversations?.filter(c => c.type === 'user') || [];
 
   return (
@@ -319,7 +331,7 @@ export default function Chat() {
                 </div>
               ) : (
                 <div className="px-4 py-8 text-center text-sm text-gray-500">
-                  {conversations ? 'No groups available' : 'Loading groups...'}
+                  {isLoadingConversations ? 'Loading groups...' : conversationsError ? 'Error loading groups' : 'No groups available'}
                 </div>
               )}
             </div>
