@@ -215,7 +215,7 @@ export default function CalloutReports() {
   const canEdit = (report) => {
     if (!report) return false;
     const isAuthor = report.writtenBy?._id === user?.id || report.writtenBy === user?.id;
-    const isAdminOrOperator = ['admin', 'operator'].includes(user?.role);
+    const isAdminOrOperator = ['admin', 'operator', 'trainer'].includes(user?.role);
     return isAuthor || (isAdminOrOperator && report.status !== 'approved');
   };
 
@@ -364,7 +364,7 @@ export default function CalloutReports() {
                       Submit
                     </button>
                   )}
-                  {['admin', 'operator'].includes(user?.role) && report.status === 'submitted' && (
+                  {['admin', 'operator', 'trainer'].includes(user?.role) && report.status === 'submitted' && (
                     <button
                       onClick={() => reviewMutation.mutate(report._id)}
                       className="btn-secondary text-sm"
@@ -373,7 +373,7 @@ export default function CalloutReports() {
                       Review
                     </button>
                   )}
-                  {['admin', 'operator'].includes(user?.role) && report.status === 'reviewed' && (
+                  {['admin', 'operator', 'trainer'].includes(user?.role) && report.status === 'reviewed' && (
                     <button
                       onClick={() => {
                         if (confirm('Approve this report? It will be attached to the callout.')) {

@@ -170,7 +170,7 @@ export default function Callouts() {
           <h1 className="text-3xl font-bold text-gray-900">Callouts</h1>
           <p className="text-sm text-gray-500 mt-1">Track and manage search and rescue callouts</p>
         </div>
-        {['admin', 'operator'].includes(user?.role) && (
+        {['admin', 'operator', 'trainer'].includes(user?.role) && (
           <button
             onClick={() => setShowCreateForm(true)}
             className="btn-primary flex items-center gap-2"

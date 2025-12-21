@@ -221,9 +221,9 @@ export default function Chat() {
     if (!selectedConversation || selectedConversation.type !== 'group') return false;
     const group = selectedConversation.group;
     
-    // Callout can only be cleared by admin/operator
+    // Callout can only be cleared by admin/operator/trainer
     if (group.type === 'callout') {
-      return ['admin', 'operator'].includes(user?.role);
+      return ['admin', 'operator', 'trainer'].includes(user?.role);
     }
     
     // Other groups can be cleared by anyone (though we might want to restrict this)

@@ -19,7 +19,7 @@ router.post('/register', [
   body('lastName').notEmpty().trim().withMessage('Last name is required'),
   body('username').isLength({ min: 3, max: 20 }).trim().withMessage('Username must be 3-20 characters'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role')
+  body('role').isIn(['admin', 'technician', 'operator', 'trainer', 'viewer']).withMessage('Invalid role')
 ], async (req, res) => {
   try {
     // Debug: Log the received data
@@ -152,7 +152,7 @@ router.put('/users/:id', require('../middleware/auth').auth, require('../middlew
   body('lastName').optional().notEmpty().trim().withMessage('Last name cannot be empty'),
   body('username').optional().isLength({ min: 3, max: 20 }).trim().withMessage('Username must be 3-20 characters'),
   body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').optional().isIn(['admin', 'technician', 'operator', 'viewer']).withMessage('Invalid role'),
+  body('role').optional().isIn(['admin', 'technician', 'operator', 'trainer', 'viewer']).withMessage('Invalid role'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
 ], async (req, res) => {
   try {

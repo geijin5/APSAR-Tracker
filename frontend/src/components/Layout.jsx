@@ -99,9 +99,9 @@ export default function Layout() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       {/* Header Bar */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 z-30">
+      <div className="fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30">
         <div className="h-full flex items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ export default function Layout() {
 
                    {/* Sidebar for mobile */}
       <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:pt-14">
-        <div className="flex flex-col flex-grow bg-gray-200 border-r border-gray-300 overflow-y-auto">
+        <div className="flex flex-col flex-grow bg-gray-200 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 overflow-y-auto">
           
           <div className="mt-4 flex-1 flex flex-col px-3">
             <nav className="space-y-1">

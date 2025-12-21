@@ -146,6 +146,7 @@ export default function Users() {
                 <option value="viewer">Viewer</option>
                 <option value="operator">Operator</option>
                 <option value="technician">Technician</option>
+                <option value="trainer">Trainer</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

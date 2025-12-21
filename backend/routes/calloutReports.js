@@ -127,7 +127,7 @@ router.put('/:id', auth, upload.array('attachments', 10), async (req, res) => {
 
     // Check permissions
     const isAuthor = report.writtenBy.toString() === req.user.id;
-    const isAdminOrOperator = ['admin', 'operator'].includes(req.user.role);
+    const isAdminOrOperator = ['admin', 'operator', 'trainer'].includes(req.user.role);
 
     if (!isAuthor && !isAdminOrOperator) {
       return res.status(403).json({ message: 'You can only edit your own reports' });
@@ -206,7 +206,7 @@ router.put('/:id/submit', auth, async (req, res) => {
 // @route   PUT /api/callout-reports/:id/review
 // @desc    Review report (Admin/Operator only)
 // @access  Private - Admin/Operator
-router.put('/:id/review', auth, authorize('admin', 'operator'), async (req, res) => {
+router.put('/:id/review', auth, authorize('admin', 'operator', 'trainer'), async (req, res) => {
   try {
     const report = await CalloutReport.findById(req.params.id);
 
@@ -232,7 +232,7 @@ router.put('/:id/review', auth, authorize('admin', 'operator'), async (req, res)
 // @route   PUT /api/callout-reports/:id/approve
 // @desc    Approve report (Admin/Operator only)
 // @access  Private - Admin/Operator
-router.put('/:id/approve', auth, authorize('admin', 'operator'), async (req, res) => {
+router.put('/:id/approve', auth, authorize('admin', 'operator', 'trainer'), async (req, res) => {
   try {
     const report = await CalloutReport.findById(req.params.id);
 
@@ -266,7 +266,7 @@ router.put('/:id/approve', auth, authorize('admin', 'operator'), async (req, res
 // @route   DELETE /api/callout-reports/:id
 // @desc    Delete callout report (Admin/Operator only)
 // @access  Private - Admin/Operator
-router.delete('/:id', auth, authorize('admin', 'operator'), async (req, res) => {
+router.delete('/:id', auth, authorize('admin', 'operator', 'trainer'), async (req, res) => {
   try {
     const report = await CalloutReport.findById(req.params.id);
 

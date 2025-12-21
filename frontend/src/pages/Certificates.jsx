@@ -29,6 +29,16 @@ export default function Certificates() {
 
   const queryClient = useQueryClient();
 
+  // Fetch users for admin/operator/trainer
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await api.get('/auth/users');
+      return response.data;
+    },
+    enabled: ['admin', 'operator', 'trainer'].includes(user?.role)
+  });
+
   // Fetch certificates
   const { data: certificates, isLoading, error } = useQuery({
     queryKey: ['certificates', filters],
@@ -36,9 +46,7 @@ export default function Certificates() {
       const params = new URLSearchParams();
       if (filters.status) params.append('status', filters.status);
       if (filters.expiringSoon) params.append('expiringSoon', 'true');
-      if (user?.role === 'admin') {
-        // Admin can see all, but we'll filter in the UI
-      }
+      // Admin, operator, and trainer can see all certificates
       const response = await api.get(`/certificates?${params}`);
       return response.data;
     }
@@ -135,8 +143,8 @@ export default function Certificates() {
     return <div className="text-red-600">Error loading certificates: {error.message}</div>;
   }
 
-  // Filter certificates by user if not admin
-  const visibleCertificates = user?.role === 'admin' 
+  // Filter certificates by user if not admin/operator/trainer
+  const visibleCertificates = ['admin', 'operator', 'trainer'].includes(user?.role)
     ? certificates || []
     : (certificates || []).filter(cert => cert.user?._id === user?.id || cert.user === user?.id);
 
@@ -208,8 +216,8 @@ export default function Certificates() {
                           <h3 className="text-lg font-semibold text-gray-900">
                             {certificate.name}
                           </h3>
-                          {user?.role === 'admin' && (
-                            <p className="text-sm text-gray-500 mt-1">
+                          {['admin', 'operator', 'trainer'].includes(user?.role) && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                               {certificate.user?.firstName} {certificate.user?.lastName}
                             </p>
                           )}
@@ -327,12 +335,16 @@ export default function Certificates() {
               </div>
 
               <div className="p-6 space-y-4">
-                {user?.role === 'admin' && (
+                {['admin', 'operator', 'trainer'].includes(user?.role) && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User *</label>
                     <select name="userId" className="input" required>
                       <option value="">Select User</option>
-                      {/* You can fetch users here if needed */}
+                      {users?.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.firstName} {u.lastName} ({u.username})
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -571,8 +583,8 @@ export default function Certificates() {
             <div className="p-6 space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{viewingCertificate.name}</h3>
-                {user?.role === 'admin' && (
-                  <p className="text-sm text-gray-600 mb-4">
+                {['admin', 'operator', 'trainer'].includes(user?.role) && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Owner: {viewingCertificate.user?.firstName} {viewingCertificate.user?.lastName}
                   </p>
                 )}

@@ -388,9 +388,9 @@ router.delete('/clear/:groupType', auth, async (req, res) => {
   try {
     const { groupType } = req.params;
 
-    // For callout, only admin and operator can clear
-    if (groupType === 'callout' && !['admin', 'operator'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Only admins and operators can clear callout chat' });
+    // For callout, only admin, operator, and trainer can clear
+    if (groupType === 'callout' && !['admin', 'operator', 'trainer'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Only admins, operators, and trainers can clear callout chat' });
     }
 
     const result = await Message.deleteMany({ groupType });

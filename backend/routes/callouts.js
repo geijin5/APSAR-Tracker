@@ -62,7 +62,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   POST /api/callouts
 // @desc    Create new callout
 // @access  Private - Admin/Operator
-router.post('/', auth, authorize('admin', 'operator'), upload.array('attachments', 10), async (req, res) => {
+router.post('/', auth, authorize('admin', 'operator', 'trainer'), upload.array('attachments', 10), async (req, res) => {
   try {
     const calloutData = {
       ...req.body,
@@ -109,7 +109,7 @@ router.post('/', auth, authorize('admin', 'operator'), upload.array('attachments
 // @route   PUT /api/callouts/:id
 // @desc    Update callout
 // @access  Private - Admin/Operator
-router.put('/:id', auth, authorize('admin', 'operator'), upload.array('attachments', 10), async (req, res) => {
+router.put('/:id', auth, authorize('admin', 'operator', 'trainer'), upload.array('attachments', 10), async (req, res) => {
   try {
     const callout = await Callout.findById(req.params.id);
 
@@ -234,7 +234,7 @@ router.post('/:id/checkout', auth, async (req, res) => {
 // @route   POST /api/callouts/:id/attach-report/:reportId
 // @desc    Attach a report to a callout (Admin/Operator only)
 // @access  Private - Admin/Operator
-router.post('/:id/attach-report/:reportId', auth, authorize('admin', 'operator'), async (req, res) => {
+router.post('/:id/attach-report/:reportId', auth, authorize('admin', 'operator', 'trainer'), async (req, res) => {
   try {
     const callout = await Callout.findById(req.params.id);
     const report = await CalloutReport.findById(req.params.reportId);
