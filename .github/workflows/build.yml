@@ -20,12 +20,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Get npm cache directory
+        id: npm-cache
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ runner.os }}-npm-frontend-${{ hashFiles('frontend/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-frontend-
       
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
       
       - name: Build frontend
         working-directory: ./frontend
@@ -52,12 +63,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+      
+      - name: Get npm cache directory
+        id: npm-cache
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ runner.os }}-npm-backend-${{ hashFiles('backend/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-backend-
       
       - name: Install dependencies
         working-directory: ./backend
-        run: npm ci
+        run: npm install
       
       - name: Check backend build
         working-directory: ./backend
@@ -94,8 +116,9 @@ jobs:
         run: |
           mkdir -p mobile-build
           cp -r frontend/dist mobile-build/
-          cp frontend/manifest.json mobile-build/ 2>/dev/null || echo "No manifest.json found"
-          cp frontend/sw.js mobile-build/ 2>/dev/null || echo "No service worker found"
+          # Copy PWA files if they exist in dist
+          cp frontend/dist/manifest.json mobile-build/ 2>/dev/null || echo "Manifest will be in dist"
+          cp frontend/dist/sw.js mobile-build/ 2>/dev/null || echo "Service worker will be in dist"
           tar -czf mobile-build.tar.gz mobile-build/
       
       - name: Upload mobile build
