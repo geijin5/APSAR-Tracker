@@ -36,13 +36,6 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
       
-      - name: Fix binary permissions
-        working-directory: ./frontend
-        run: |
-          find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
-          chmod +x node_modules/.bin/vite 2>/dev/null || true
-          ls -la node_modules/.bin/vite || echo "Vite binary check"
-      
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build

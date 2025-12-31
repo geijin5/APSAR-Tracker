@@ -34,7 +34,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "bash node_modules/.bin/vite build",
+    "build": "npx vite build",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons-from-logo.js",
     "generate-android-icons": "node scripts/copy-icons-for-android.js",
