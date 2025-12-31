@@ -613,55 +613,59 @@ export default function Dashboard() {
         )}
       </div>
     ),
-    upcomingMaintenance: stats?.maintenance?.upcoming?.length > 0 ? (
+    upcomingMaintenance: (
       <div key="upcomingMaintenance" className="card mb-6 bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Upcoming Maintenance</h3>
-        <div className="space-y-4">
-          {(() => {
-            const groupedByDate = stats.maintenance.upcoming.reduce((acc, maintenance) => {
-              const dateKey = formatDateCompact(maintenance.dueDate);
-              if (!acc[dateKey]) {
-                acc[dateKey] = [];
-              }
-              acc[dateKey].push(maintenance);
-              return acc;
-            }, {});
+        {stats?.maintenance?.upcoming?.length > 0 ? (
+          <div className="space-y-4">
+            {(() => {
+              const groupedByDate = stats.maintenance.upcoming.reduce((acc, maintenance) => {
+                const dateKey = formatDateCompact(maintenance.dueDate);
+                if (!acc[dateKey]) {
+                  acc[dateKey] = [];
+                }
+                acc[dateKey].push(maintenance);
+                return acc;
+              }, {});
 
-            const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
-              return new Date(a) - new Date(b);
-            });
+              const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+                return new Date(a) - new Date(b);
+              });
 
-            return sortedDates.map((dateKey) => (
-              <div key={dateKey} className="border-l-4 border-primary-500 pl-4">
-                <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{dateKey}</h4>
-                <ul className="space-y-2">
-                  {groupedByDate[dateKey].map((maintenance) => (
-                    <li key={maintenance._id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {maintenance.asset?.name || 'Unknown Asset'}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">{maintenance.title}</p>
-                      </div>
-                      <div className="ml-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          maintenance.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                          maintenance.priority === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                          maintenance.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        }`}>
-                          {maintenance.priority}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ));
-          })()}
-        </div>
+              return sortedDates.map((dateKey) => (
+                <div key={dateKey} className="border-l-4 border-primary-500 pl-4">
+                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{dateKey}</h4>
+                  <ul className="space-y-2">
+                    {groupedByDate[dateKey].map((maintenance) => (
+                      <li key={maintenance._id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {maintenance.asset?.name || 'Unknown Asset'}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{maintenance.title}</p>
+                        </div>
+                        <div className="ml-4">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            maintenance.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                            maintenance.priority === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                            maintenance.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          }`}>
+                            {maintenance.priority}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ));
+            })()}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No upcoming maintenance scheduled</p>
+        )}
       </div>
-    ) : null,
+    ),
     quickChecklists: (
       <div key="quickChecklists" className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -721,24 +725,28 @@ export default function Dashboard() {
         />
       </div>
     ),
-    expiringCertifications: stats?.expiring?.length > 0 ? (
+    expiringCertifications: (
       <div key="expiringCertifications" className="card bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Expiring Certifications</h3>
-        <ul className="space-y-3">
-          {stats.expiring.slice(0, 5).map((item, idx) => (
-            <li key={idx} className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{item.assetNumber}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Check certifications</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {stats?.expiring?.length > 0 ? (
+          <ul className="space-y-3">
+            {stats.expiring.slice(0, 5).map((item, idx) => (
+              <li key={idx} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.assetNumber}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Check certifications</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No expiring certifications</p>
+        )}
       </div>
-    ) : null,
+    ),
     recentActivity: (
       <div key="recentActivity" className="card bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Recent Activity</h3>
@@ -998,208 +1006,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Certificate Expiration Alerts */}
-      {expiringCertificates && expiringCertificates.length > 0 && (
-        <div className="mb-8 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <ExclamationTriangleIcon className="h-5 w-5 text-orange-400" />
-            </div>
-            <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-orange-800">
-                {expiringCertificates.length} Certificate{expiringCertificates.length > 1 ? 's' : ''} Expiring Soon
-              </h3>
-              <p className="mt-2 text-sm text-orange-700">
-                The following certificates will expire within 30 days:
-              </p>
-              <ul className="mt-2 space-y-1">
-                {expiringCertificates.slice(0, 5).map((cert) => {
-                  const expiryDate = new Date(cert.expiryDate);
-                  const daysUntil = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                  return (
-                    <li key={cert._id} className="text-sm text-orange-700">
-                      • {cert.name} - {cert.user?.firstName} {cert.user?.lastName} ({daysUntil} days)
-                    </li>
-                  );
-                })}
-                {expiringCertificates.length > 5 && (
-                  <li className="text-sm text-orange-700 font-medium">
-                    ...and {expiringCertificates.length - 5} more
-                  </li>
-                )}
-              </ul>
-              <a
-                href="/certificates?expiringSoon=true"
-                className="mt-3 inline-block text-sm font-medium text-orange-800 hover:text-orange-900 underline"
-              >
-                View all expiring certificates →
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Maintenance by Date */}
-      {stats?.maintenance?.upcoming?.length > 0 && (
-        <div className="card mb-6">
-          <h3 className="text-lg font-semibold mb-4">Upcoming Maintenance</h3>
-          <div className="space-y-4">
-            {(() => {
-              // Group maintenance by date
-              const groupedByDate = stats.maintenance.upcoming.reduce((acc, maintenance) => {
-                const dateKey = formatDateCompact(maintenance.dueDate);
-                if (!acc[dateKey]) {
-                  acc[dateKey] = [];
-                }
-                acc[dateKey].push(maintenance);
-                return acc;
-              }, {});
-
-              // Sort dates
-              const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
-                return new Date(a) - new Date(b);
-              });
-
-              return sortedDates.map((dateKey) => (
-                <div key={dateKey} className="border-l-4 border-primary-500 pl-4">
-                  <h4 className="text-sm font-bold text-gray-700 mb-2">{dateKey}</h4>
-                  <ul className="space-y-2">
-                    {groupedByDate[dateKey].map((maintenance) => (
-                      <li key={maintenance._id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {maintenance.asset?.name || 'Unknown Asset'}
-                          </p>
-                          <p className="text-xs text-gray-600">{maintenance.title}</p>
-                        </div>
-                        <div className="ml-4">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            maintenance.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                            maintenance.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                            maintenance.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {maintenance.priority}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ));
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Access Checklists */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Quick Access Checklists</h2>
-          <p className="text-sm text-gray-500">Start common checklists with one click</p>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {checklistTemplates && checklistTemplates.length > 0 ? checklistTemplates.map((template) => (
-            <button
-              key={template._id}
-              onClick={() => handleStartChecklist(template)}
-              className="group bg-white rounded-lg shadow-md border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 text-left"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl ${getTypeColor(template.type)} flex items-center justify-center shadow-md`}>
-                  <CheckCircleIcon className="h-6 w-6 text-white" />
-                </div>
-                <PlayIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-              </div>
-              
-              <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                {template.name}
-              </h3>
-              
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {template.description}
-              </p>
-              
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">
-                  {template.items?.length || 0} items
-                </span>
-                <span className="text-blue-600 font-medium">
-                  Start Checklist →
-                </span>
-              </div>
-            </button>
-          )) : (
-            <div className="col-span-full text-center py-8">
-              <CheckCircleIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No checklists available</h3>
-              <p className="text-gray-500">Checklist templates will appear here once they're loaded.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Calendar Section */}
-      <div className="mb-8">
-        <Calendar 
-          events={calendarEvents} 
-          onEventClick={handleEventClick}
-          onDateClick={handleDateClick}
-          onDeleteEvent={handleDeleteEvent}
-          canEdit={true}
-        />
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expiring Certifications */}
-        {stats?.expiring?.length > 0 && (
-          <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Expiring Certifications</h3>
-            <ul className="space-y-3">
-              {stats.expiring.slice(0, 5).map((item, idx) => (
-                <li key={idx} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.assetNumber}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">Check certifications</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Recent Activity */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-          {stats?.recentActivity?.length > 0 ? (
-            <ul className="space-y-3">
-              {stats.recentActivity.slice(0, 5).map((activity) => (
-                <li key={activity._id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.asset.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {activity.performedBy?.firstName} {activity.performedBy?.lastName}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">
-                      {formatDate(activity.completedDate)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-500">No recent activity</p>
-          )}
-        </div>
-      </div>
 
       {/* Active Checklist Modal */}
       {selectedChecklist && (
