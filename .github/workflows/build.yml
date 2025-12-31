@@ -20,18 +20,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-      
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-frontend-${{ hashFiles('frontend/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-frontend-
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
       
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci || npm install
       
       - name: Build frontend
         working-directory: ./frontend
@@ -58,18 +52,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-      
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-backend-${{ hashFiles('backend/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-backend-
+          cache: 'npm'
+          cache-dependency-path: backend/package.json
       
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install
+        run: npm ci || npm install
       
       - name: Check backend build
         working-directory: ./backend
