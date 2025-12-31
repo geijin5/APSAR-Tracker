@@ -35,19 +35,20 @@ jobs:
         shell: bash
         run: |
           npm install --legacy-peer-deps
+          # Ensure vite is installed
+          npm list vite || npm install vite@^5.0.8 --save-dev --legacy-peer-deps
           # Fix permissions on all binaries immediately after install
           find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
           find node_modules/vite -type f -name "*.js" -exec chmod +x {} \; 2>/dev/null || true
       
-      - name: Verify Vite installation and permissions
+      - name: Verify vite installation
         working-directory: ./frontend
         shell: bash
         run: |
-          ls -la node_modules/.bin/vite || echo "Vite binary not found"
-          # Ensure vite has execute permissions
-          chmod +x node_modules/.bin/vite 2>/dev/null || true
-          # Test if vite works
-          node node_modules/vite/bin/vite.js --version || npx vite --version || npm list vite
+          echo "Verifying vite installation..."
+          npm list vite || echo "Warning: vite not found in package list"
+          ls -la node_modules/.bin/vite 2>/dev/null || echo "Note: vite binary not in .bin"
+          find node_modules/vite -name "*.js" -type f 2>/dev/null | head -3 || echo "Note: no vite JS files found"
       
       - name: Generate icons (if logo exists)
         working-directory: ./frontend

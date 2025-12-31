@@ -34,7 +34,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npx vite build",
+    "build": "node scripts/build-vite.js",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons-from-logo.js",
     "generate-android-icons": "node scripts/copy-icons-for-android.js",

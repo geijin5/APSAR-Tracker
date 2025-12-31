@@ -34,19 +34,28 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install --legacy-peer-deps
+        run: |
+          npm install --legacy-peer-deps
+          # Ensure vite is installed
+          npm list vite || npm install vite@^5.0.8 --save-dev --legacy-peer-deps
       
-      - name: Fix binary permissions
+      - name: Fix binary permissions and verify setup
         working-directory: ./frontend
         run: |
           # Fix permissions on all binaries
           find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
-          # Also fix permissions on vite package binaries if they exist
           find node_modules/vite -type f -name "*.js" -exec chmod +x {} \; 2>/dev/null || true
+          # Verify vite is accessible
+          echo "Verifying vite installation..."
+          npm list vite || echo "Warning: vite not found in package list"
+          ls -la node_modules/.bin/vite 2>/dev/null || echo "Note: vite binary not in .bin"
+          find node_modules/vite -name "*.js" -type f | head -3 || echo "Note: no vite JS files found"
       
       - name: Build frontend
         working-directory: ./frontend
-        run: npm run build
+        run: |
+          # The build script has multiple fallback methods
+          npm run build
         env:
           NODE_ENV: production
       
