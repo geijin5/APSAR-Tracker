@@ -63,13 +63,20 @@ jobs:
         working-directory: ./frontend
         shell: bash
         run: |
-          # Ensure all binaries have execute permissions before build
+          # Debug: Check what's available
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Vite location check:"
+          ls -la node_modules/.bin/vite 2>/dev/null || echo "vite binary not found in .bin"
+          find node_modules -name "vite.js" -o -name "vite" 2>/dev/null | head -5 || echo "No vite found"
+          
+          # Ensure all binaries have execute permissions
           find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
-          # Verify vite binary exists and has permissions
-          ls -la node_modules/.bin/vite
-          chmod +x node_modules/.bin/vite
-          # Build using the binary directly
-          ./node_modules/.bin/vite build
+          
+          # Use npm run which handles PATH automatically
+          echo "Running: npm run build"
+          npm run build
         env:
           NODE_ENV: production
       
