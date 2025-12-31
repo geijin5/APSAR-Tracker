@@ -36,6 +36,14 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
       
+      - name: Verify vite installation
+        working-directory: ./frontend
+        run: |
+          echo "Checking vite installation..."
+          ls -la node_modules/vite/dist/node/cli.js 2>/dev/null || echo "Vite CLI not found at expected path"
+          find node_modules/vite -name "cli.js" -type f 2>/dev/null | head -3 || echo "No vite CLI found"
+          npm list vite || echo "Vite not in package list"
+      
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
