@@ -40,9 +40,17 @@ jobs:
         working-directory: ./frontend
         run: |
           echo "Checking vite installation..."
-          ls -la node_modules/vite/dist/node/cli.js 2>/dev/null || echo "Vite CLI not found at expected path"
-          find node_modules/vite -name "cli.js" -type f 2>/dev/null | head -3 || echo "No vite CLI found"
+          echo "Vite package location:"
           npm list vite || echo "Vite not in package list"
+          echo ""
+          echo "Looking for vite binaries:"
+          find node_modules/vite -name "*.js" -type f 2>/dev/null | grep -E "(cli|bin|vite\.js)" | head -5 || echo "No vite JS files found"
+          echo ""
+          echo "Checking node_modules/.bin:"
+          ls -la node_modules/.bin/vite 2>/dev/null || echo "No vite binary in .bin"
+          echo ""
+          echo "Checking vite package structure:"
+          ls -la node_modules/vite/ 2>/dev/null | head -10 || echo "Vite package not found"
       
       - name: Build frontend
         working-directory: ./frontend
