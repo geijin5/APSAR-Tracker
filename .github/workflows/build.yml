@@ -21,15 +21,10 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Get npm cache directory
-        id: npm-cache
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ steps.npm-cache.outputs.dir }}
+          path: ~/.npm
           key: ${{ runner.os }}-npm-frontend-${{ hashFiles('frontend/package.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-frontend-
@@ -64,15 +59,10 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Get npm cache directory
-        id: npm-cache
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ steps.npm-cache.outputs.dir }}
+          path: ~/.npm
           key: ${{ runner.os }}-npm-backend-${{ hashFiles('backend/package.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-backend-
