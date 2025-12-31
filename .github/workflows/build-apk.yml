@@ -36,25 +36,19 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
       
-      - name: Verify vite installation
+      - name: Verify vite is accessible
         working-directory: ./frontend
         run: |
-          echo "Checking vite installation..."
-          echo "Vite package location:"
-          npm list vite || echo "Vite not in package list"
-          echo ""
-          echo "Looking for vite binaries:"
-          find node_modules/vite -name "*.js" -type f 2>/dev/null | grep -E "(cli|bin|vite\.js)" | head -5 || echo "No vite JS files found"
-          echo ""
-          echo "Checking node_modules/.bin:"
-          ls -la node_modules/.bin/vite 2>/dev/null || echo "No vite binary in .bin"
-          echo ""
-          echo "Checking vite package structure:"
-          ls -la node_modules/vite/ 2>/dev/null | head -10 || echo "Vite package not found"
+          echo "Checking if vite command works..."
+          npx vite --version || ./node_modules/.bin/vite --version || echo "Vite check failed, but continuing..."
       
       - name: Build frontend
         working-directory: ./frontend
-        run: npm run build
+        run: |
+          # Ensure PATH includes node_modules/.bin
+          export PATH="$PWD/node_modules/.bin:$PATH"
+          # Run build using npm which handles PATH automatically
+          npm run build
         env:
           NODE_ENV: production
       
