@@ -36,19 +36,17 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
       
-      - name: Verify vite is accessible
+      - name: Fix binary permissions
         working-directory: ./frontend
         run: |
-          echo "Checking if vite command works..."
-          npx vite --version || ./node_modules/.bin/vite --version || echo "Vite check failed, but continuing..."
+          # Fix permissions on all binaries
+          find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
+          # Also fix permissions on vite package binaries if they exist
+          find node_modules/vite -type f -name "*.js" -exec chmod +x {} \; 2>/dev/null || true
       
       - name: Build frontend
         working-directory: ./frontend
-        run: |
-          # Ensure PATH includes node_modules/.bin
-          export PATH="$PWD/node_modules/.bin:$PATH"
-          # Run build using npm which handles PATH automatically
-          npm run build
+        run: npm run build
         env:
           NODE_ENV: production
       

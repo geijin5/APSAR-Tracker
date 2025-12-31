@@ -37,6 +37,7 @@ jobs:
           npm install --legacy-peer-deps
           # Fix permissions on all binaries immediately after install
           find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
+          find node_modules/vite -type f -name "*.js" -exec chmod +x {} \; 2>/dev/null || true
       
       - name: Verify Vite installation and permissions
         working-directory: ./frontend
@@ -62,11 +63,7 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         shell: bash
-        run: |
-          # Ensure PATH includes node_modules/.bin
-          export PATH="$PWD/node_modules/.bin:$PATH"
-          # Run build using npm which handles PATH automatically
-          npm run build
+        run: npm run build
         env:
           NODE_ENV: production
       
