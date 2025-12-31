@@ -65,8 +65,11 @@ jobs:
         run: |
           # Ensure all binaries have execute permissions before build
           find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
-          # Use node directly to run vite to avoid permission issues
-          node node_modules/vite/bin/vite.js build
+          # Verify vite binary exists and has permissions
+          ls -la node_modules/.bin/vite
+          chmod +x node_modules/.bin/vite
+          # Build using the binary directly
+          ./node_modules/.bin/vite build
         env:
           NODE_ENV: production
       
