@@ -105,9 +105,11 @@ export default function Layout() {
         <div className="h-full flex items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg flex items-center justify-center shadow-md">
-                <SignalIcon className="h-5 w-5 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="APSAR Logo" 
+                className="h-8 w-8 object-contain"
+              />
               <div>
                 <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
                   <span className="text-primary-600 dark:text-primary-400">APSAR</span> <span className="font-normal text-gray-600 dark:text-gray-400">Tracker</span>
