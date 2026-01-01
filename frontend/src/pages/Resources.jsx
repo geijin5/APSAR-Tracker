@@ -6,6 +6,7 @@ import {
   VideoCameraIcon,
   DocumentTextIcon,
   ListBulletIcon,
+  MapPinIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
@@ -109,6 +110,17 @@ export default function Resources() {
       }
     }
 
+    // Handle map coordinates
+    if (formData.get('type') === 'map') {
+      const lat = formData.get('latitude');
+      const lng = formData.get('longitude');
+      if (lat && lng) {
+        formData.set('coordinates', JSON.stringify({ lat: parseFloat(lat), lng: parseFloat(lng) }));
+      }
+      formData.delete('latitude');
+      formData.delete('longitude');
+    }
+
     // Handle tags
     const tagsText = formData.get('tags');
     if (tagsText) {
@@ -135,6 +147,19 @@ export default function Resources() {
       }
     }
 
+    // Handle map coordinates
+    if (formData.get('type') === 'map') {
+      const lat = formData.get('latitude');
+      const lng = formData.get('longitude');
+      if (lat && lng) {
+        formData.set('coordinates', JSON.stringify({ lat: parseFloat(lat), lng: parseFloat(lng) }));
+      } else {
+        formData.set('coordinates', '');
+      }
+      formData.delete('latitude');
+      formData.delete('longitude');
+    }
+
     // Handle tags
     const tagsText = formData.get('tags');
     if (tagsText) {
@@ -152,6 +177,8 @@ export default function Resources() {
         return DocumentTextIcon;
       case 'list':
         return ListBulletIcon;
+      case 'map':
+        return MapPinIcon;
       default:
         return DocumentTextIcon;
     }
@@ -165,6 +192,8 @@ export default function Resources() {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700';
       case 'list':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700';
+      case 'map':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-300 dark:border-purple-700';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600';
     }
@@ -178,7 +207,7 @@ export default function Resources() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Resources</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Videos, forms, and lists for members to review
+            Videos, forms, lists, and maps for members to review
           </p>
         </div>
         {isAdmin && (
@@ -211,6 +240,7 @@ export default function Resources() {
               <option value="video">Video</option>
               <option value="form">Form</option>
               <option value="list">List</option>
+              <option value="map">Map</option>
             </select>
           </div>
           <div>
@@ -386,6 +416,7 @@ export default function Resources() {
                   <option value="video">Video</option>
                   <option value="form">Form</option>
                   <option value="list">List</option>
+                  <option value="map">Map</option>
                 </select>
               </div>
 
@@ -403,16 +434,58 @@ export default function Resources() {
                 </div>
               )}
 
+              {resourceType === 'map' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Map URL (Google Maps, etc.)
+                    </label>
+                    <input
+                      type="url"
+                      name="mapUrl"
+                      className="input"
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        name="latitude"
+                        className="input"
+                        placeholder="45.1234"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        name="longitude"
+                        className="input"
+                        placeholder="-112.5678"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               {resourceType !== 'list' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    File
+                    File {resourceType === 'map' && '(Map image)'}
                   </label>
                   <input
                     type="file"
                     name="file"
                     className="input"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.mp4,.mov,.avi"
+                    accept={resourceType === 'map' ? '.jpg,.jpeg,.png,.gif,.pdf' : '.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp4,.mov,.avi'}
                   />
                 </div>
               )}
@@ -530,6 +603,7 @@ export default function Resources() {
                   <option value="video">Video</option>
                   <option value="form">Form</option>
                   <option value="list">List</option>
+                  <option value="map">Map</option>
                 </select>
               </div>
 
@@ -547,15 +621,60 @@ export default function Resources() {
                 </div>
               )}
 
+              {(editingResource.type === 'map' || resourceType === 'map') && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Map URL
+                    </label>
+                    <input
+                      type="url"
+                      name="mapUrl"
+                      defaultValue={editingResource.mapUrl}
+                      className="input"
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        name="latitude"
+                        defaultValue={editingResource.coordinates?.lat}
+                        className="input"
+                        placeholder="45.1234"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        name="longitude"
+                        defaultValue={editingResource.coordinates?.lng}
+                        className="input"
+                        placeholder="-112.5678"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  File (leave empty to keep current)
+                  File (leave empty to keep current) {(editingResource.type === 'map' || resourceType === 'map') && '(Map image)'}
                 </label>
                 <input
                   type="file"
                   name="file"
                   className="input"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.mp4,.mov,.avi"
+                  accept={(editingResource.type === 'map' || resourceType === 'map') ? '.jpg,.jpeg,.png,.gif,.pdf' : '.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp4,.mov,.avi'}
                 />
                 {editingResource.file && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -697,6 +816,57 @@ export default function Resources() {
                     <DocumentTextIcon className="h-5 w-5" />
                     View/Download Form
                   </a>
+                </div>
+              )}
+
+              {viewingResource.type === 'map' && (
+                <div className="space-y-4">
+                  {viewingResource.mapUrl && (
+                    <div>
+                      <a
+                        href={viewingResource.mapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary flex items-center gap-2 inline-flex"
+                      >
+                        <MapPinIcon className="h-5 w-5" />
+                        Open Map
+                      </a>
+                    </div>
+                  )}
+                  
+                  {viewingResource.coordinates && viewingResource.coordinates.lat && viewingResource.coordinates.lng && (
+                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Coordinates</h4>
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Latitude:</strong> {viewingResource.coordinates.lat}</p>
+                        <p><strong>Longitude:</strong> {viewingResource.coordinates.lng}</p>
+                        <a
+                          href={`https://www.google.com/maps?q=${viewingResource.coordinates.lat},${viewingResource.coordinates.lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 dark:text-primary-400 hover:underline mt-2 inline-block"
+                        >
+                          View on Google Maps →
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {viewingResource.file && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Map Image</h4>
+                      <a
+                        href={viewingResource.file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary flex items-center gap-2 inline-flex"
+                      >
+                        <CloudArrowUpIcon className="h-5 w-5" />
+                        View/Download Map Image
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
 

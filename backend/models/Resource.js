@@ -12,7 +12,7 @@ const resourceSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['video', 'form', 'list'],
+    enum: ['video', 'form', 'list', 'map'],
     required: true
   },
   file: {
@@ -25,6 +25,16 @@ const resourceSchema = new mongoose.Schema({
   videoUrl: {
     type: String,
     trim: true
+  },
+  // For maps, can store map URL or coordinates
+  mapUrl: {
+    type: String,
+    trim: true
+  },
+  // For maps, store coordinates (lat, lng)
+  coordinates: {
+    lat: Number,
+    lng: Number
   },
   // For lists, store items as array
   listItems: [{

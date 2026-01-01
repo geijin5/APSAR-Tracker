@@ -83,7 +83,7 @@ router.post('/', [
   authorize('admin'),
   upload.single('file'),
   body('title').notEmpty().trim().withMessage('Title is required'),
-  body('type').isIn(['video', 'form', 'list']).withMessage('Type must be video, form, or list')
+  body('type').isIn(['video', 'form', 'list', 'map']).withMessage('Type must be video, form, list, or map')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -91,7 +91,7 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, description, type, videoUrl, listItems, category, tags } = req.body;
+    const { title, description, type, videoUrl, mapUrl, coordinates, listItems, category, tags } = req.body;
 
     const resourceData = {
       title,
@@ -113,6 +113,26 @@ router.post('/', [
     // Handle video URL
     if (type === 'video' && videoUrl) {
       resourceData.videoUrl = videoUrl;
+    }
+
+    // Handle map URL
+    if (type === 'map' && mapUrl) {
+      resourceData.mapUrl = mapUrl;
+    }
+
+    // Handle map coordinates
+    if (type === 'map' && coordinates) {
+      try {
+        const coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates;
+        if (coords.lat && coords.lng) {
+          resourceData.coordinates = {
+            lat: parseFloat(coords.lat),
+            lng: parseFloat(coords.lng)
+          };
+        }
+      } catch (e) {
+        // If coordinates parsing fails, ignore it
+      }
     }
 
     // Handle list items
@@ -161,7 +181,7 @@ router.put('/:id', [
   authorize('admin'),
   upload.single('file'),
   body('title').optional().notEmpty().trim().withMessage('Title cannot be empty'),
-  body('type').optional().isIn(['video', 'form', 'list']).withMessage('Type must be video, form, or list')
+  body('type').optional().isIn(['video', 'form', 'list', 'map']).withMessage('Type must be video, form, list, or map')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -174,7 +194,7 @@ router.put('/:id', [
       return res.status(404).json({ msg: 'Resource not found' });
     }
 
-    const { title, description, type, videoUrl, listItems, category, tags, isActive } = req.body;
+    const { title, description, type, videoUrl, mapUrl, coordinates, listItems, category, tags, isActive } = req.body;
 
     if (title !== undefined) resource.title = title;
     if (description !== undefined) resource.description = description;
@@ -194,6 +214,28 @@ router.put('/:id', [
     // Handle video URL
     if (type === 'video' && videoUrl !== undefined) {
       resource.videoUrl = videoUrl;
+    }
+
+    // Handle map URL
+    if (type === 'map' && mapUrl !== undefined) {
+      resource.mapUrl = mapUrl;
+    }
+
+    // Handle map coordinates
+    if (type === 'map' && coordinates !== undefined) {
+      try {
+        const coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates;
+        if (coords && coords.lat && coords.lng) {
+          resource.coordinates = {
+            lat: parseFloat(coords.lat),
+            lng: parseFloat(coords.lng)
+          };
+        } else if (coords === null || coords === '') {
+          resource.coordinates = undefined;
+        }
+      } catch (e) {
+        // If coordinates parsing fails, ignore it
+      }
     }
 
     // Handle list items
