@@ -17,7 +17,8 @@ import {
   CalendarIcon,
   ChatBubbleLeftRightIcon,
   AcademicCapIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  FolderOpenIcon
 } from '@heroicons/react/24/outline'
 
 export default function Layout() {
@@ -94,6 +95,7 @@ export default function Layout() {
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, badge: unreadData?.unreadCount },
     { name: 'Callouts', href: '/callouts', icon: ClipboardDocumentListIcon },
     { name: 'Callout Reports', href: '/callout-reports', icon: DocumentTextIcon },
+    { name: 'Resources', href: '/resources', icon: FolderOpenIcon },
     { name: 'Reports', href: '/reports', icon: ChartBarIcon },
     ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: UsersIcon }] : []),
   ]

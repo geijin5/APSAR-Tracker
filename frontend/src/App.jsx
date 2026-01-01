@@ -16,6 +16,7 @@ import Certificates from './pages/Certificates'
 import Chat from './pages/Chat'
 import Callouts from './pages/Callouts'
 import CalloutReports from './pages/CalloutReports'
+import Resources from './pages/Resources'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -53,6 +54,7 @@ function App() {
         <Route path="chat" element={<Chat />} />
         <Route path="callouts" element={<Callouts />} />
         <Route path="callout-reports" element={<CalloutReports />} />
+        <Route path="resources" element={<Resources />} />
       </Route>
     </Routes>
   )

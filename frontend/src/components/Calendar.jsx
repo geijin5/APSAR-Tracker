@@ -98,23 +98,23 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {format(currentMonth, 'MMMM yyyy')}
         </h3>
         <div className="flex gap-2">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+            <ChevronLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={goToNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronRightIcon className="h-5 w-5 text-gray-600" />
+            <ChevronRightIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
       <div className="grid grid-cols-7 gap-1">
         {/* Day headers */}
         {dayNames.map(day => (
-          <div key={day} className="text-center text-xs font-semibold text-gray-600 py-2">
+          <div key={day} className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2">
             {day}
           </div>
         ))}
@@ -135,15 +135,15 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
           return (
             <div
               key={idx}
-              className={`min-h-[80px] border border-gray-200 p-1 relative group cursor-pointer ${
-                !isCurrentMonth ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
-              } ${dayIsToday ? 'ring-2 ring-primary-500' : ''}`}
+              className={`min-h-[80px] border border-gray-200 dark:border-gray-700 p-1 relative group cursor-pointer ${
+                !isCurrentMonth ? 'bg-gray-50 dark:bg-gray-900/50' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } ${dayIsToday ? 'ring-2 ring-primary-500 dark:ring-primary-400' : ''}`}
               onClick={() => isCurrentMonth && handleDateClick(date)}
             >
               <div className="flex items-center justify-between mb-1">
                 <div className={`text-sm font-medium ${
-                  !isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
-                } ${dayIsToday ? 'text-primary-600' : ''}`}>
+                  !isCurrentMonth ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'
+                } ${dayIsToday ? 'text-primary-600 dark:text-primary-400' : ''}`}>
                   {format(date, 'd')}
                 </div>
                 {isCurrentMonth && canEdit && (
@@ -152,10 +152,10 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                       e.stopPropagation();
                       handleDateClick(date);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-100 rounded transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-opacity"
                     title="Add appointment"
                   >
-                    <PlusIcon className="h-3 w-3 text-blue-600" />
+                    <PlusIcon className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                   </button>
                 )}
               </div>
@@ -177,7 +177,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                 ))}
                 {dayEvents.length > 2 && (
                   <div 
-                    className="text-xs text-gray-500 px-1 cursor-pointer hover:text-gray-700"
+                    className="text-xs text-gray-500 dark:text-gray-400 px-1 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Show all events for this day
@@ -199,53 +199,53 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
       </div>
       
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-yellow-100 border border-yellow-400 rounded"></div>
-          <span className="text-gray-600">Maintenance Due</span>
+          <div className="w-3 h-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Maintenance Due</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-primary-100 border border-primary-400 rounded"></div>
-          <span className="text-gray-600">Work Orders</span>
+          <div className="w-3 h-3 bg-primary-100 dark:bg-primary-900/30 border border-primary-400 dark:border-primary-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Work Orders</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-100 border border-blue-400 rounded"></div>
-          <span className="text-gray-600">Meetings</span>
+          <div className="w-3 h-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-400 dark:border-blue-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Meetings</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-100 border border-green-400 rounded"></div>
-          <span className="text-gray-600">Training</span>
+          <div className="w-3 h-3 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Training</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-purple-100 border border-purple-400 rounded"></div>
-          <span className="text-gray-600">Inspections</span>
+          <div className="w-3 h-3 bg-purple-100 dark:bg-purple-900/30 border border-purple-400 dark:border-purple-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Inspections</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-pink-100 border border-pink-400 rounded"></div>
-          <span className="text-gray-600">Events</span>
+          <div className="w-3 h-3 bg-pink-100 dark:bg-pink-900/30 border border-pink-400 dark:border-pink-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Events</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-orange-100 border border-orange-400 rounded"></div>
-          <span className="text-gray-600">Maintenance</span>
+          <div className="w-3 h-3 bg-orange-100 dark:bg-orange-900/30 border border-orange-400 dark:border-orange-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Maintenance</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gray-100 border border-gray-400 rounded"></div>
-          <span className="text-gray-600">Other</span>
+          <div className="w-3 h-3 bg-gray-100 dark:bg-gray-700 border border-gray-400 dark:border-gray-600 rounded"></div>
+          <span className="text-gray-600 dark:text-gray-400">Other</span>
         </div>
       </div>
 
       {/* Event Details Modal */}
       {showEventDetails && selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Event Details</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Event Details</h3>
               <button
                 onClick={() => {
                   setShowEventDetails(false);
                   setSelectedEvent(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -255,25 +255,25 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
               {selectedEvent.allEvents ? (
                 // Multiple events view
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-4">{selectedEvent.title}</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-4">{selectedEvent.title}</h4>
                   <div className="space-y-3">
                     {selectedEvent.allEvents.map((event, idx) => (
                       <div 
                         key={idx}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                       >
                         <div className="flex-1">
                           <div className={`inline-block px-2 py-1 rounded text-xs font-medium mb-1 ${event.color}`}>
                             {event.title}
                           </div>
                           {event.description && (
-                            <p className="text-sm text-gray-600">{event.description}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{event.description}</p>
                           )}
                         </div>
                         <div className="flex gap-1 ml-2">
                           <button
                             onClick={() => handleEventClick(event)}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                            className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"
                             title="View details"
                           >
                             <EyeIcon className="h-4 w-4" />
@@ -281,7 +281,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                           {canEdit && onDeleteEvent && (
                             <button
                               onClick={() => handleDeleteEvent(event)}
-                              className="p-1 text-red-600 hover:bg-red-100 rounded"
+                              className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
                               title="Delete event"
                             >
                               <TrashIcon className="h-4 w-4" />
@@ -296,27 +296,27 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                 // Single event view
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">{selectedEvent.title}</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{selectedEvent.title}</h4>
                     {selectedEvent.description && (
-                      <p className="text-gray-600">{selectedEvent.description}</p>
+                      <p className="text-gray-600 dark:text-gray-300">{selectedEvent.description}</p>
                     )}
                   </div>
                   
                   {selectedEvent.date && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       <strong>Date:</strong> {format(new Date(selectedEvent.date), 'EEEE, MMMM d, yyyy')}
                     </div>
                   )}
                   
                   {selectedEvent.startDate && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       <strong>Time:</strong> {format(new Date(selectedEvent.startDate), 'h:mm a')}
                       {selectedEvent.endDate && ` - ${format(new Date(selectedEvent.endDate), 'h:mm a')}`}
                     </div>
                   )}
                   
                   {selectedEvent.location && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       <strong>Location:</strong> {selectedEvent.location}
                     </div>
                   )}
@@ -330,7 +330,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                   )}
                   
                   {selectedEvent.attendees && selectedEvent.attendees.length > 0 && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       <strong>Attendees:</strong> {selectedEvent.attendees.length} people
                     </div>
                   )}
@@ -338,7 +338,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
               )}
             </div>
             
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+            <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
               {!selectedEvent.allEvents && canEdit && onDeleteEvent && (
                 <button
                   onClick={() => {
@@ -346,7 +346,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                       handleDeleteEvent(selectedEvent);
                     }
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition-colors"
                 >
                   Delete
                 </button>
@@ -356,7 +356,7 @@ export default function Calendar({ events = [], onEventClick, onDateClick, onDel
                   setShowEventDetails(false);
                   setSelectedEvent(null);
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Close
               </button>
