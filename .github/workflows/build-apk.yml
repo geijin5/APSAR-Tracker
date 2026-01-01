@@ -41,6 +41,17 @@ jobs:
           echo "Installing dependencies..."
           npm install --legacy-peer-deps
           echo "Dependencies installed successfully"
+          
+          # Verify vite is installed
+          echo "Verifying vite installation..."
+          if ! npm list vite > /dev/null 2>&1; then
+            echo "vite not found, installing explicitly..."
+            npm install vite@^5.0.8 --save-dev --legacy-peer-deps
+          fi
+          
+          # Verify vite is accessible
+          echo "Checking vite accessibility..."
+          npx vite --version || echo "Warning: vite version check failed"
       
       - name: Build frontend web app
         working-directory: ./frontend
