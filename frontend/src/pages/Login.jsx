@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -7,8 +7,20 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const justLoggedIn = useRef(false)
+
+  // Redirect if already logged in or just logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (justLoggedIn.current) {
+        justLoggedIn.current = false
+        setLoading(false)
+      }
+      navigate('/')
+    }
+  }, [user, authLoading, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,12 +29,23 @@ export default function Login() {
 
     try {
       await login(username, password)
-      navigate('/')
+      // Mark that we just logged in - useEffect will handle navigation
+      justLoggedIn.current = true
+      // Don't set loading to false here - let useEffect handle it after navigation
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to login')
-    } finally {
+      setError(err.response?.data?.msg || err.message || 'Failed to login')
       setLoading(false)
+      justLoggedIn.current = false
     }
+  }
+
+  // Show loading if checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+      </div>
+    )
   }
 
   return (

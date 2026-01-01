@@ -47,8 +47,17 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Don't redirect if we're already on the login page or if it's a login request
+      const isLoginRequest = error.config?.url?.includes('/auth/login')
+      const isOnLoginPage = window.location.pathname === '/login'
+      
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      delete api.defaults.headers.common['Authorization']
+      
+      // Only redirect if not already on login page and not a login request
+      if (!isLoginRequest && !isOnLoginPage) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
