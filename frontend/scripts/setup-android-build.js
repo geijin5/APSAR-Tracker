@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+
+// Helper script to ensure Android build is ready
+import { existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, '..');
+const androidDir = join(projectRoot, 'android');
+
+console.log('🔧 Verifying Android build setup...\n');
+
+// Check if Android directory exists
+if (!existsSync(androidDir)) {
+  console.log('⚠️  Android directory not found. Initializing...');
+  try {
+    execSync('npx @capacitor/cli add android --no-deps', {
+      cwd: projectRoot,
+      stdio: 'inherit'
+    });
+  } catch (error) {
+    console.log('⚠️  First method failed, trying alternative...');
+    try {
+      execSync('npx cap add android --no-deps', {
+        cwd: projectRoot,
+        stdio: 'inherit'
+      });
+    } catch (error2) {
+      console.error('❌ Failed to initialize Android platform');
+      process.exit(1);
+    }
+  }
+}
+
+if (!existsSync(androidDir)) {
+  console.error('❌ Error: Android directory still not found after initialization');
+  process.exit(1);
+}
+
+console.log('✅ Android platform is ready\n');
+
+// Verify gradlew exists
+const gradlew = join(androidDir, 'gradlew');
+if (!existsSync(gradlew)) {
+  console.error('❌ Error: gradlew not found');
+  process.exit(1);
+}
+
+console.log('✅ Gradle wrapper found\n');
+console.log('✅ Android build setup complete!\n');
+
