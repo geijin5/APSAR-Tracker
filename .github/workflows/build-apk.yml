@@ -42,11 +42,16 @@ jobs:
           npm install --legacy-peer-deps
           echo "Dependencies installed successfully"
           
+          # Fix permissions on all binaries
+          echo "Fixing binary permissions..."
+          find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
+          
           # Verify vite is installed
           echo "Verifying vite installation..."
           if ! npm list vite > /dev/null 2>&1; then
             echo "vite not found, installing explicitly..."
             npm install vite@^5.0.8 --save-dev --legacy-peer-deps
+            find node_modules/.bin -type f -exec chmod +x {} \; 2>/dev/null || true
           fi
           
           # Verify vite is accessible
