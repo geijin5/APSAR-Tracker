@@ -75,17 +75,17 @@ jobs:
         continue-on-error: true
       
       - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli@latest
+        run: npm install -g @capacitor/cli@6
       
       - name: Initialize Capacitor Android (if needed)
         working-directory: ./frontend
         run: |
           if [ ! -d "android" ]; then
             echo "Android platform not found, initializing..."
-            npx @capacitor/cli add android --no-deps
+            npx cap add android
             if [ ! -d "android" ]; then
               echo "Failed to initialize Android platform, trying alternative method..."
-              npx cap add android --no-deps
+              npx @capacitor/cli add android
             fi
           else
             echo "Android platform already exists"
