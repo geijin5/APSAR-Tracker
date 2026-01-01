@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+// Build script that runs vite programmatically
+import { build } from 'vite';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, '..');
+
+// Import vite config
+const viteConfig = await import(join(projectRoot, 'vite.config.js'));
+
+// Run vite build
+try {
+  console.log('🔨 Building with Vite...\n');
+  await build({
+    ...viteConfig.default,
+    configFile: join(projectRoot, 'vite.config.js'),
+    root: projectRoot,
+  });
+  console.log('\n✅ Build successful!');
+  process.exit(0);
+} catch (error) {
+  console.error('\n❌ Build failed!');
+  console.error(error);
+  process.exit(1);
+}
+
