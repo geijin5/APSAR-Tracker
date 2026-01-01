@@ -106,6 +106,18 @@ jobs:
           echo "Sync completed"
           ls -la android/ || echo "Android directory check"
       
+      - name: Configure Gradle repositories
+        working-directory: ./frontend
+        run: |
+          if [ -d "android" ]; then
+            echo "Configuring Gradle repositories..."
+            node scripts/configure-gradle-repos.js || echo "Repository configuration script completed"
+          else
+            echo "⚠️  Android directory not found"
+            exit 1
+          fi
+        continue-on-error: true
+      
       - name: Copy icons to Android (if generated)
         working-directory: ./frontend
         run: |
@@ -123,13 +135,30 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         continue-on-error: true
       
-      - name: Build Android APK
+      - name: Build Android APK with retry
         working-directory: ./frontend/android
         run: |
           echo "Building APK with Gradle..."
-          chmod +x ./gradlew
-          ./gradlew clean assembleDebug --no-daemon --stacktrace
-          echo "APK build completed"
+          chmod +x ./gradlew || true
+          
+          # Retry logic for network issues
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if ./gradlew clean assembleDebug --no-daemon --stacktrace --refresh-dependencies; then
+              echo "✅ APK build completed successfully"
+              exit 0
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⚠️  Build failed, retrying in 10 seconds... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+                sleep 10
+              else
+                echo "❌ Build failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
       
       - name: Find and verify APK
         working-directory: ./frontend/android
