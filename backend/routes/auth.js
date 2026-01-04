@@ -83,8 +83,11 @@ router.post('/login', [
 
     const { username, password } = req.body;
 
+    // Normalize username (lowercase and trim) to match database storage
+    const normalizedUsername = username.toLowerCase().trim();
+
     // Check if user exists
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: normalizedUsername });
     if (!user) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
