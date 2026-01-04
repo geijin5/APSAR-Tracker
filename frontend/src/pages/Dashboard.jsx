@@ -204,7 +204,7 @@ export default function Dashboard() {
       type: formData.get('type') || 'other',
       priority: formData.get('priority') || 'medium',
       allDay: isAllDay,
-      ...(user?.role === 'viewer' && { createdByName: formData.get('createdByName') })
+      ...(user?.role === 'member' && { createdByName: formData.get('createdByName') })
     };
 
     // Only add endDate for non-all-day appointments
@@ -253,9 +253,9 @@ export default function Dashboard() {
     }
   };
 
-  // Check if user can customize layout (admin, operator, technician, trainer)
-  const canCustomizeLayout = ['admin', 'operator', 'technician', 'trainer'].includes(user?.role);
-  const isMember = user?.role === 'viewer';
+  // Check if user can customize layout (admin, operator, technician, trainer, viewer)
+  const canCustomizeLayout = ['admin', 'officer', 'member'].includes(user?.role);
+  const isMember = user?.role === 'member';
 
   // Default layout order - all available sections
   const defaultLayout = [
@@ -267,6 +267,9 @@ export default function Dashboard() {
     'expiringCertifications',
     'recentActivity'
   ];
+
+  // Viewer-specific default layout (only sections they can access)
+  const viewerDefaultLayout = ['quickChecklists'];
 
   // Section metadata for display
   const sectionMetadata = {
@@ -282,9 +285,10 @@ export default function Dashboard() {
   // Initialize layout from localStorage or use default
   useEffect(() => {
     if (canCustomizeLayout && !dashboardLayout) {
-      setDashboardLayout(defaultLayout);
+      const layoutToUse = isMember ? viewerDefaultLayout : defaultLayout;
+      setDashboardLayout(layoutToUse);
     }
-  }, [user?.id, canCustomizeLayout]);
+  }, [user?.id, canCustomizeLayout, isMember]);
 
   // Save layout to localStorage when it changes
   useEffect(() => {
@@ -308,7 +312,9 @@ export default function Dashboard() {
     e.preventDefault();
     if (draggedItem === null || draggedItem === dropIndex) return;
 
-    const newLayout = [...dashboardLayout];
+    const defaultLayoutToUse = isMember ? viewerDefaultLayout : defaultLayout;
+    const current = dashboardLayout || defaultLayoutToUse;
+    const newLayout = [...current];
     const [removed] = newLayout.splice(draggedItem, 1);
     newLayout.splice(dropIndex, 0, removed);
     setDashboardLayout(newLayout);
@@ -321,191 +327,35 @@ export default function Dashboard() {
 
   // Toggle section visibility
   const toggleSection = (sectionKey) => {
-    const current = dashboardLayout || defaultLayout;
+    const defaultLayoutToUse = isMember ? viewerDefaultLayout : defaultLayout;
+    const current = dashboardLayout || defaultLayoutToUse;
     if (current.includes(sectionKey)) {
       // Remove section
       setDashboardLayout(current.filter(key => key !== sectionKey));
     } else {
-      // Add section at the end
-      setDashboardLayout([...current, sectionKey]);
+      // Add section at the end (only if it's in available sections)
+      if (availableSections.includes(sectionKey)) {
+        setDashboardLayout([...current, sectionKey]);
+      }
     }
   };
 
   // Reset to default layout
   const resetLayout = () => {
-    setDashboardLayout(defaultLayout);
+    const layoutToUse = isMember ? viewerDefaultLayout : defaultLayout;
+    setDashboardLayout(layoutToUse);
   };
 
   // Get current layout order
-  const currentLayout = dashboardLayout || defaultLayout;
+  const currentLayout = dashboardLayout || (isMember ? viewerDefaultLayout : defaultLayout);
   
   // Get available sections (all sections that can be added)
-  const availableSections = defaultLayout;
+  const availableSections = isMember ? viewerDefaultLayout : defaultLayout;
 
   if (isLoading) {
     return <div className="text-gray-900 dark:text-gray-100">Loading...</div>
   }
 
-  // For members, only show checklists and chat
-  if (isMember) {
-    return (
-      <div className="dark:text-gray-100">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Dashboard</h1>
-        
-        {/* Quick Access Checklists */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Quick Access Checklists</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Start common checklists with one click</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {checklistTemplates && checklistTemplates.length > 0 ? checklistTemplates.map((template) => (
-              <button
-                key={template._id}
-                onClick={() => handleStartChecklist(template)}
-                className="group bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 text-left"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl ${getTypeColor(template.type)} flex items-center justify-center shadow-md`}>
-                    <CheckCircleIcon className="h-6 w-6 text-white" />
-                  </div>
-                  <PlayIcon className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
-                </div>
-                
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 transition-colors">
-                  {template.name}
-                </h3>
-                
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                  {template.description}
-                </p>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    {template.items?.length || 0} items
-                  </span>
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">
-                    Start Checklist →
-                  </span>
-                </div>
-              </button>
-            )) : (
-              <div className="col-span-full text-center py-8">
-                <CheckCircleIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No checklists available</h3>
-                <p className="text-gray-500 dark:text-gray-400">Checklist templates will appear here once they're loaded.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Chat Link */}
-        <div className="mb-8">
-          <Link
-            to="/chat"
-            className="group bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-md">
-                <ChatBubbleLeftRightIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Chat</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Communicate with team members</p>
-              </div>
-            </div>
-            <span className="text-blue-600 dark:text-blue-400 font-medium">Go to Chat →</span>
-          </Link>
-        </div>
-
-        {/* Active Checklist Modal - same as before */}
-        {selectedChecklist && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedChecklist.name}</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Complete the checklist below</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setSelectedChecklist(null);
-                    setActiveChecklist([]);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <div className="p-6">
-                <Checklist 
-                  checklist={activeChecklist}
-                  onChecklistChange={setActiveChecklist}
-                  showProgress={true}
-                  templateData={selectedChecklist}
-                  showCompletion={true}
-                  onCompletionChange={setChecklistCompletion}
-                />
-                
-                <div className="mt-6 flex gap-3 justify-end">
-                  <button
-                    onClick={() => {
-                      setSelectedChecklist(null);
-                      setActiveChecklist([]);
-                      setChecklistCompletion(null);
-                    }}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!checklistCompletion?.completedBy?.trim()) {
-                        alert('Please enter your name in the "Completed By" field before completing the checklist.');
-                        return;
-                      }
-
-                      const requiredItems = activeChecklist.filter(item => item.required);
-                      const allRequiredCompleted = requiredItems.length === 0 || requiredItems.every(item => item.completed);
-                      
-                      if (!allRequiredCompleted) {
-                        alert('Please complete all required items (marked with *) before finishing the checklist.');
-                        return;
-                      }
-
-                      const completedChecklistData = {
-                        template: selectedChecklist._id,
-                        templateName: selectedChecklist.name,
-                        templateType: selectedChecklist.type,
-                        templateCategory: selectedChecklist.category,
-                        items: activeChecklist,
-                        completedBy: checklistCompletion.completedBy,
-                        completedDate: checklistCompletion.completedDate || getCurrentDate(),
-                        completedTime: checklistCompletion.completedTime || getCurrentTime(),
-                        notes: checklistCompletion.notes || ''
-                      };
-                      
-                      saveCompletedChecklistMutation.mutate(completedChecklistData);
-                    }}
-                    disabled={!checklistCompletion?.completedBy?.trim() || saveCompletedChecklistMutation.isLoading}
-                    className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                      checklistCompletion?.completedBy?.trim() && !saveCompletedChecklistMutation.isLoading
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {saveCompletedChecklistMutation.isLoading ? 'Saving...' : 'Complete & Save Checklist'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   const statCards = [
     {
@@ -847,6 +697,27 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* Chat Link for Viewers */}
+      {isMember && (
+        <div className="mb-8">
+          <Link
+            to="/chat"
+            className="group bg-white dark:bg-gray-800 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:shadow-lg transition-all duration-200 p-6 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-md">
+                <ChatBubbleLeftRightIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Chat</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Communicate with team members</p>
+              </div>
+            </div>
+            <span className="text-blue-600 dark:text-blue-400 font-medium">Go to Chat →</span>
+          </Link>
+        </div>
+      )}
+
       {/* Section Manager Modal */}
       {showSectionManager && canCustomizeLayout && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1010,18 +881,18 @@ export default function Dashboard() {
       {/* Active Checklist Modal */}
       {selectedChecklist && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedChecklist.name}</h2>
-                <p className="text-sm text-gray-600 mt-1">Complete the checklist below</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedChecklist.name}</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Complete the checklist below</p>
               </div>
               <button
                 onClick={() => {
                   setSelectedChecklist(null);
                   setActiveChecklist([]);
                 }}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -1044,7 +915,7 @@ export default function Dashboard() {
                     setActiveChecklist([]);
                     setChecklistCompletion(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1170,7 +1041,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Name field for viewer users */}
-                {user?.role === 'viewer' && (
+                {user?.role === 'member' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                     <input

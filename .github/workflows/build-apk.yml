@@ -111,12 +111,25 @@ jobs:
         run: |
           if [ -d "android" ]; then
             echo "Configuring Gradle repositories..."
-            node scripts/configure-gradle-repos.js || echo "Repository configuration script completed"
+            node scripts/configure-gradle-repos.js
+            echo "✅ Repository configuration completed"
+            
+            # Verify configuration
+            echo ""
+            echo "📋 Verifying repository configuration..."
+            if [ -f "android/settings.gradle" ]; then
+              echo "settings.gradle repositories:"
+              grep -A 10 "repositories {" android/settings.gradle | head -15 || echo "Could not parse repositories"
+            fi
+            if [ -f "android/gradle.properties" ]; then
+              echo ""
+              echo "gradle.properties network settings:"
+              grep -E "(connectionTimeout|socketTimeout|keepAlive|maxConnections)" android/gradle.properties || echo "No network settings found"
+            fi
           else
             echo "⚠️  Android directory not found"
             exit 1
           fi
-        continue-on-error: true
       
       - name: Copy icons to Android (if generated)
         working-directory: ./frontend

@@ -31,8 +31,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['meeting', 'training', 'inspection', 'maintenance', 'event', 'other'],
-    default: 'meeting'
+    enum: ['inspection', 'maintenance', 'other'],
+    default: 'other'
   },
   priority: {
     type: String,
@@ -143,16 +143,10 @@ appointmentSchema.methods.isOverdue = function() {
 
 appointmentSchema.methods.getColorClass = function() {
   switch (this.type) {
-    case 'meeting':
-      return 'bg-blue-100 text-blue-800 border-blue-400';
-    case 'training':
-      return 'bg-green-100 text-green-800 border-green-400';
     case 'inspection':
       return 'bg-purple-100 text-purple-800 border-purple-400';
     case 'maintenance':
       return 'bg-orange-100 text-orange-800 border-orange-400';
-    case 'event':
-      return 'bg-pink-100 text-pink-800 border-pink-400';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-400';
   }

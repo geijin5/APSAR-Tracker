@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const ChecklistTemplate = require('../models/ChecklistTemplate');
+const User = require('../models/User');
 const { auth, authorize } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
+const { generateTemplateChecklistPDF } = require('../utils/pdfGenerator');
 
 // @route   GET /api/checklists/templates
 // @desc    Get all checklist templates
@@ -48,7 +50,7 @@ router.get('/templates/:id', auth, async (req, res) => {
 // @route   POST /api/checklists/templates
 // @desc    Create new checklist template
 // @access  Private - requires operator role or higher
-router.post('/templates', auth, authorize('admin', 'operator'), [
+router.post('/templates', auth, authorize('admin', 'officer'), [
   body('name', 'Name is required').not().isEmpty(),
   body('type', 'Type is required').isIn(['callout', 'maintenance', 'vehicle_inspection', 'general']),
   body('items', 'Items array is required').isArray({ min: 1 })
@@ -77,7 +79,7 @@ router.post('/templates', auth, authorize('admin', 'operator'), [
 // @route   PUT /api/checklists/templates/:id
 // @desc    Update checklist template
 // @access  Private - requires operator role or higher
-router.put('/templates/:id', auth, authorize('admin', 'operator'), async (req, res) => {
+router.put('/templates/:id', auth, authorize('admin', 'officer'), async (req, res) => {
   try {
     const template = await ChecklistTemplate.findById(req.params.id);
     if (!template) {
@@ -101,6 +103,39 @@ router.delete('/templates/:id', auth, authorize('admin'), async (req, res) => {
   try {
     await ChecklistTemplate.findByIdAndUpdate(req.params.id, { isActive: false });
     res.json({ msg: 'Checklist template deactivated' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   GET /api/checklists/templates/:id/pdf
+// @desc    Export checklist template as PDF (blank checklist)
+// @access  Private
+router.get('/templates/:id/pdf', auth, async (req, res) => {
+  try {
+    const template = await ChecklistTemplate.findById(req.params.id);
+
+    if (!template) {
+      return res.status(404).json({ msg: 'Checklist template not found' });
+    }
+
+    // Get current user for "Prepared For" field
+    const user = await User.findById(req.user.id).select('firstName lastName');
+
+    // Generate PDF
+    const doc = generateTemplateChecklistPDF(template, user);
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="checklist-${template.name}-${new Date().toISOString().split('T')[0]}.pdf"`
+    );
+
+    // Pipe PDF to response
+    doc.pipe(res);
+    doc.end();
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

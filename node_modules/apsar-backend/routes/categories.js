@@ -23,7 +23,7 @@ router.get('/', auth, async (req, res) => {
 // @route   POST /api/categories
 // @desc    Create a new category
 // @access  Private - requires operator role or higher
-router.post('/', auth, authorize('admin', 'operator', 'technician'), [
+router.post('/', auth, authorize('admin', 'officer'), [
   body('name').notEmpty().trim(),
   body('type').isIn(['asset', 'workorder', 'maintenance'])
 ], async (req, res) => {
@@ -71,4 +71,8 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
 

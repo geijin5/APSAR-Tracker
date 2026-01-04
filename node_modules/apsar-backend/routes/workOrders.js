@@ -162,7 +162,7 @@ router.post('/:id/notes', auth, [
 // @route   PATCH /api/workorders/:id/complete
 // @desc    Mark work order as completed
 // @access  Private - requires operator role or higher
-router.patch('/:id/complete', auth, authorize('admin', 'operator', 'technician'), async (req, res) => {
+router.patch('/:id/complete', auth, authorize('admin', 'officer'), async (req, res) => {
   try {
     const workOrder = await WorkOrder.findById(req.params.id);
     if (!workOrder) {

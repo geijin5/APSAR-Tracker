@@ -39,6 +39,8 @@ app.use('/api/adlc', require('./routes/adlcIntegration'));
 app.use('/api/callouts', require('./routes/callouts'));
 app.use('/api/callout-reports', require('./routes/calloutReports'));
 app.use('/api/resources', require('./routes/resources'));
+app.use('/api/training', require('./routes/training'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Health check endpoint (must come before catch-all route)
 app.get('/api/health', (req, res) => {

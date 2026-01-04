@@ -30,3 +30,7 @@ categorySchema.index({ type: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);
 
+
+
+
+

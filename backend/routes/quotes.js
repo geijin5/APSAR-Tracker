@@ -57,7 +57,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   POST /api/quotes
 // @desc    Create new maintenance quote
 // @access  Private - requires operator role or higher
-router.post('/', auth, authorize('admin', 'operator', 'technician'), upload.array('attachments', 5), async (req, res) => {
+router.post('/', auth, authorize('admin', 'officer'), upload.array('attachments', 5), async (req, res) => {
   try {
     const quoteData = {
       ...req.body,
@@ -86,7 +86,7 @@ router.post('/', auth, authorize('admin', 'operator', 'technician'), upload.arra
 // @route   PUT /api/quotes/:id
 // @desc    Update maintenance quote
 // @access  Private - requires operator role or higher
-router.put('/:id', auth, authorize('admin', 'operator', 'technician'), upload.array('attachments', 5), async (req, res) => {
+router.put('/:id', auth, authorize('admin', 'officer'), upload.array('attachments', 5), async (req, res) => {
   try {
     const quote = await MaintenanceQuote.findById(req.params.id);
     if (!quote) {
@@ -152,4 +152,8 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
 

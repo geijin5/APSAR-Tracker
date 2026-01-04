@@ -110,6 +110,53 @@ const assetSchema = new mongoose.Schema({
   nextMaintenanceDate: Date,
   totalHours: Number,
   totalMiles: Number,
+  // Vehicle-specific: Odometer reading history
+  odometerReadings: [{
+    reading: {
+      type: Number,
+      required: true
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    recordedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    notes: String
+  }],
+  // Vehicle-specific: Current odometer reading
+  currentOdometer: Number,
+  // Equipment-specific: Assignment tracking
+  assignedTo: {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    assignedDate: Date,
+    assignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    returnDate: Date,
+    notes: String
+  },
+  // Equipment-specific: Inspection schedule
+  inspectionSchedule: {
+    frequency: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', 'quarterly', 'semi-annual', 'annual', 'as_needed']
+    },
+    nextInspectionDate: Date,
+    lastInspectionDate: Date
+  },
+  // Equipment-specific: Condition status
+  conditionStatus: {
+    type: String,
+    enum: ['Ready', 'Needs Service', 'Out of Service', 'Reserved'],
+    default: 'Ready'
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

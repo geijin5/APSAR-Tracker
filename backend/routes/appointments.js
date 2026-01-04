@@ -100,7 +100,7 @@ router.post('/', [
   body('title').notEmpty().trim().withMessage('Title is required'),
   body('startDate').isISO8601().withMessage('Valid start date is required'),
   body('endDate').optional().isISO8601().withMessage('Valid end date is required'),
-  body('type').optional().isIn(['meeting', 'training', 'inspection', 'maintenance', 'event', 'other']),
+  body('type').optional().isIn(['inspection', 'maintenance', 'other']),
   body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
   body('status').optional().isIn(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'])
 ], async (req, res) => {
@@ -155,7 +155,7 @@ router.post('/', [
       endDate: new Date(finalEndDate),
       allDay: allDay || false,
       location,
-      type: type || 'meeting',
+      type: type || 'other',
       priority: priority || 'medium',
       status: status || 'scheduled',
       attendees: attendees || [],
@@ -193,7 +193,7 @@ router.put('/:id', [
   body('title').optional().notEmpty().trim(),
   body('startDate').optional().isISO8601(),
   body('endDate').optional().isISO8601(),
-  body('type').optional().isIn(['meeting', 'training', 'inspection', 'maintenance', 'event', 'other']),
+  body('type').optional().isIn(['inspection', 'maintenance', 'other']),
   body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
   body('status').optional().isIn(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled'])
 ], async (req, res) => {

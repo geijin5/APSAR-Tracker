@@ -77,17 +77,17 @@ const Checklist = ({
   const getCategoryColor = (category) => {
     switch (category) {
       case 'safety':
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
       case 'operational':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'communication':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
       case 'equipment':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
       case 'documentation':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
     }
   };
 
@@ -97,28 +97,28 @@ const Checklist = ({
 
   if (!items || items.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
         <p>No checklist items available</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       {showProgress && (
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Progress: {completedCount}/{totalCount} items completed
             </span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {Math.round(progressPercentage)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -127,9 +127,9 @@ const Checklist = ({
 
       <div className="p-4">
         {templateData && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900">{templateData.name}</h3>
-            <p className="text-sm text-gray-600 mt-1">{templateData.description}</p>
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">{templateData.name}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{templateData.description}</p>
           </div>
         )}
 
@@ -137,7 +137,7 @@ const Checklist = ({
           {items
             .sort((a, b) => (a.order || 0) - (b.order || 0))
             .map((item, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-3">
+              <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800/50">
                 <div className="flex items-start space-x-3">
                   <button
                     onClick={() => handleItemToggle(index)}
@@ -145,7 +145,7 @@ const Checklist = ({
                     className={`flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-colors ${
                       item.completed
                         ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-blue-500'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400'
                     } ${readonly ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     {item.completed && <CheckIcon className="h-3 w-3" />}
@@ -155,16 +155,16 @@ const Checklist = ({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${
-                          item.completed ? 'line-through text-gray-500' : 'text-gray-900'
+                          item.completed ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'
                         }`}>
                           {item.item || item.title}
                           {item.required && (
-                            <span className="ml-1 text-red-500 text-xs">*</span>
+                            <span className="ml-1 text-red-500 dark:text-red-400 text-xs">*</span>
                           )}
                         </p>
                         
                         {item.description && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {item.description}
                           </p>
                         )}
@@ -183,14 +183,14 @@ const Checklist = ({
                           value={item.notes || ''}
                           onChange={(e) => handleNotesChange(index, e.target.value)}
                           placeholder="Add notes (optional)..."
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                           rows="2"
                         />
                       </div>
                     )}
 
                     {readonly && item.notes && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700">
+                      <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-xs text-gray-700 dark:text-gray-300">
                         <strong>Notes:</strong> {item.notes}
                       </div>
                     )}
@@ -201,19 +201,19 @@ const Checklist = ({
         </div>
 
         {!readonly && (
-          <div className="mt-4 text-xs text-gray-500 italic">
+          <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 italic">
             * Required items must be completed
           </div>
         )}
 
         {/* Completion Section */}
         {showCompletion && !readonly && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-blue-900 mb-3">Checklist Completion</h4>
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">Checklist Completion</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Completed By *
                 </label>
                 <input
@@ -221,33 +221,33 @@ const Checklist = ({
                   value={completionData.completedBy}
                   onChange={(e) => handleCompletionDataChange('completedBy', e.target.value)}
                   placeholder="Enter your full name"
-                  className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Date Completed
                   </label>
                   <input
                     type="text"
                     value={completionData.completedDate}
                     readOnly
-                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-600"
+                    className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                     placeholder="Auto-filled"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Time Completed
                   </label>
                   <input
                     type="text"
                     value={completionData.completedTime}
                     readOnly
-                    className="w-full text-sm border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-600"
+                    className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                     placeholder="Auto-filled"
                   />
                 </div>
@@ -255,20 +255,20 @@ const Checklist = ({
             </div>
 
             <div className="mt-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Completion Notes (Optional)
               </label>
               <textarea
                 value={completionData.notes}
                 onChange={(e) => handleCompletionDataChange('notes', e.target.value)}
                 placeholder="Add any additional notes about this checklist completion..."
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                 rows="3"
               />
             </div>
 
             {completionData.completedDate && (
-              <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+              <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-200">
                 ✅ <strong>Auto-completed:</strong> Date and time filled automatically when all required items were checked.
               </div>
             )}
@@ -277,26 +277,26 @@ const Checklist = ({
 
         {/* Readonly Completion Display */}
         {showCompletion && readonly && completionData.completedBy && (
-          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Completion Details</h4>
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Completion Details</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Completed By:</span>
-                <p className="text-gray-900">{completionData.completedBy}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Completed By:</span>
+                <p className="text-gray-900 dark:text-gray-100">{completionData.completedBy}</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Date:</span>
-                <p className="text-gray-900">{completionData.completedDate}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Date:</span>
+                <p className="text-gray-900 dark:text-gray-100">{completionData.completedDate}</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Time:</span>
-                <p className="text-gray-900">{completionData.completedTime}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Time:</span>
+                <p className="text-gray-900 dark:text-gray-100">{completionData.completedTime}</p>
               </div>
             </div>
             {completionData.notes && (
               <div className="mt-3">
-                <span className="font-medium text-gray-700">Notes:</span>
-                <p className="text-gray-900 mt-1">{completionData.notes}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span>
+                <p className="text-gray-900 dark:text-gray-100 mt-1">{completionData.notes}</p>
               </div>
             )}
           </div>

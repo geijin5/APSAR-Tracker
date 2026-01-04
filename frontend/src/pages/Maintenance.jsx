@@ -177,7 +177,7 @@ export default function Maintenance() {
       totalCost: parseFloat(formData.get('totalCost')) || 0,
       checklist: checklist,
       checklistTemplate: selectedTemplate || undefined,
-      ...(user?.role === 'viewer' && { createdByName: formData.get('createdByName') })
+      ...(user?.role === 'member' && { createdByName: formData.get('createdByName') })
     };
     createMutation.mutate(data);
   };
@@ -356,7 +356,7 @@ export default function Maintenance() {
             </div>
 
             {/* Name field and auto-fill date/time for viewer users */}
-            {user?.role === 'viewer' && (
+            {user?.role === 'member' && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-blue-900 mb-3">Creator Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

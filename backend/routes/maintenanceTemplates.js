@@ -50,7 +50,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   POST /api/maintenance-templates
 // @desc    Create new maintenance template
 // @access  Private - requires operator role or higher
-router.post('/', auth, authorize('admin', 'operator', 'technician'), [
+router.post('/', auth, authorize('admin', 'officer'), [
   body('name', 'Name is required').not().isEmpty(),
   body('type', 'Type is required').isIn(['preventive', 'corrective', 'inspection', 'calibration', 'certification']),
   body('category', 'Category is required').not().isEmpty(),
@@ -81,7 +81,7 @@ router.post('/', auth, authorize('admin', 'operator', 'technician'), [
 // @route   PUT /api/maintenance-templates/:id
 // @desc    Update maintenance template
 // @access  Private - requires operator role or higher
-router.put('/:id', auth, authorize('admin', 'operator', 'technician'), async (req, res) => {
+router.put('/:id', auth, authorize('admin', 'officer'), async (req, res) => {
   try {
     const template = await MaintenanceTemplate.findById(req.params.id);
     if (!template) {

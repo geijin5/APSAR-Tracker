@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const CompletedChecklist = require('../models/CompletedChecklist');
 const ChecklistTemplate = require('../models/ChecklistTemplate');
+const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
+const { generateCompletedChecklistPDF, generateTemplateChecklistPDF } = require('../utils/pdfGenerator');
 
 // @route   GET /api/completed-checklists
 // @desc    Get all completed checklists
@@ -223,6 +225,45 @@ router.post('/', auth, [
     await completedChecklist.populate('completedByUser', 'firstName lastName');
 
     res.status(201).json(completedChecklist);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   GET /api/completed-checklists/:id/pdf
+// @desc    Export completed checklist as PDF
+// @access  Private
+router.get('/:id/pdf', auth, async (req, res) => {
+  try {
+    const completedChecklist = await CompletedChecklist.findById(req.params.id)
+      .populate('template')
+      .populate('completedByUser', 'firstName lastName');
+
+    if (!completedChecklist) {
+      return res.status(404).json({ msg: 'Completed checklist not found' });
+    }
+
+    // Members can only export their own checklists
+    if (req.user.role === 'member' && completedChecklist.completedByUser._id.toString() !== req.user.id) {
+      return res.status(403).json({ msg: 'Access denied' });
+    }
+
+    const user = await User.findById(completedChecklist.completedByUser._id).select('firstName lastName');
+
+    // Generate PDF
+    const doc = generateCompletedChecklistPDF(completedChecklist, user, completedChecklist.template);
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="checklist-${completedChecklist.templateName}-${completedChecklist.completedDate || new Date(completedChecklist.completedDateTime).toISOString().split('T')[0]}.pdf"`
+    );
+
+    // Pipe PDF to response
+    doc.pipe(res);
+    doc.end();
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

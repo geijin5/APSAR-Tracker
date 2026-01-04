@@ -143,10 +143,8 @@ export default function Users() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
               <select name="role" required className="input">
-                <option value="viewer">Viewer</option>
-                <option value="operator">Operator</option>
-                <option value="technician">Technician</option>
-                <option value="trainer">Trainer</option>
+                <option value="member">Member</option>
+                <option value="officer">Officer</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

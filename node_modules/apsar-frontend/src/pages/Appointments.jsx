@@ -179,6 +179,11 @@ export default function Appointments() {
     return <div>Error loading appointments: {error.message}</div>;
   }
 
+  // Exclude meeting, training, and event types from the list view
+  const visibleAppointments = (appointments || []).filter(
+    (a) => a && !['meeting', 'training', 'event'].includes(a.type)
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -204,11 +209,8 @@ export default function Appointments() {
               className="input"
             >
               <option value="">All Types</option>
-              <option value="meeting">Meeting</option>
-              <option value="training">Training</option>
               <option value="inspection">Inspection</option>
               <option value="maintenance">Maintenance</option>
-              <option value="event">Event</option>
               <option value="other">Other</option>
             </select>
           </div>
@@ -250,8 +252,8 @@ export default function Appointments() {
 
       {/* Appointments List */}
       <div className="grid gap-4">
-        {appointments && appointments.length > 0 ? (
-          appointments.map((appointment) => {
+        {visibleAppointments && visibleAppointments.length > 0 ? (
+          visibleAppointments.map((appointment) => {
             const TypeIcon = getTypeIcon(appointment.type);
             return (
               <div key={appointment._id} className="card hover:shadow-md transition-shadow">
@@ -430,11 +432,8 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select name="type" className="input">
-                      <option value="meeting">Meeting</option>
-                      <option value="training">Training</option>
                       <option value="inspection">Inspection</option>
                       <option value="maintenance">Maintenance</option>
-                      <option value="event">Event</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
@@ -643,11 +642,8 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select name="type" defaultValue={editingAppointment.type} className="input">
-                      <option value="meeting">Meeting</option>
-                      <option value="training">Training</option>
                       <option value="inspection">Inspection</option>
                       <option value="maintenance">Maintenance</option>
-                      <option value="event">Event</option>
                       <option value="other">Other</option>
                     </select>
                   </div>

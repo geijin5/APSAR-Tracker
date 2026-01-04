@@ -54,7 +54,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   POST /api/assets
 // @desc    Create new asset
 // @access  Private - requires operator role or higher
-router.post('/', auth, authorize('admin', 'operator'), upload.array('images', 10), async (req, res) => {
+router.post('/', auth, authorize('admin', 'officer'), upload.array('images', 10), async (req, res) => {
   try {
     const assetData = { ...req.body };
     
@@ -85,7 +85,7 @@ router.post('/', auth, authorize('admin', 'operator'), upload.array('images', 10
 // @route   PUT /api/assets/:id
 // @desc    Update asset
 // @access  Private - requires operator role or higher
-router.put('/:id', auth, authorize('admin', 'operator'), upload.array('images', 10), async (req, res) => {
+router.put('/:id', auth, authorize('admin', 'officer'), upload.array('images', 10), async (req, res) => {
   try {
     const asset = await Asset.findById(req.params.id);
     if (!asset) {
@@ -177,5 +177,141 @@ router.get('/search/barcode/:barcode', auth, async (req, res) => {
   }
 });
 
+// @route   POST /api/assets/:id/odometer
+// @desc    Add odometer reading to vehicle
+// @access  Private - Officer/Admin
+router.post('/:id/odometer', auth, authorize('admin', 'officer'), [
+  body('reading').isNumeric().withMessage('Reading must be a number'),
+  body('date').optional().isISO8601().withMessage('Date must be valid')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+      return res.status(404).json({ msg: 'Asset not found' });
+    }
+
+    const reading = {
+      reading: parseFloat(req.body.reading),
+      date: req.body.date ? new Date(req.body.date) : new Date(),
+      recordedBy: req.user.id,
+      notes: req.body.notes || ''
+    };
+
+    asset.odometerReadings.push(reading);
+    asset.currentOdometer = reading.reading;
+    asset.totalMiles = reading.reading; // Update total miles if current reading is higher
+    if (!asset.totalMiles || reading.reading > asset.totalMiles) {
+      asset.totalMiles = reading.reading;
+    }
+
+    await asset.save();
+    res.json(asset);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   POST /api/assets/:id/assign
+// @desc    Assign equipment to user
+// @access  Private - Officer/Admin
+router.post('/:id/assign', auth, authorize('admin', 'officer'), [
+  body('userId').notEmpty().withMessage('User ID is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+      return res.status(404).json({ msg: 'Asset not found' });
+    }
+
+    asset.assignedTo = {
+      user: req.body.userId,
+      assignedDate: new Date(),
+      assignedBy: req.user.id,
+      notes: req.body.notes || ''
+    };
+
+    await asset.save();
+    const populated = await Asset.findById(asset._id)
+      .populate('assignedTo.user', 'firstName lastName username')
+      .populate('assignedTo.assignedBy', 'firstName lastName');
+    res.json(populated);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   POST /api/assets/:id/unassign
+// @desc    Unassign equipment from user
+// @access  Private - Officer/Admin
+router.post('/:id/unassign', auth, authorize('admin', 'officer'), async (req, res) => {
+  try {
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+      return res.status(404).json({ msg: 'Asset not found' });
+    }
+
+    if (asset.assignedTo) {
+      asset.assignedTo.returnDate = new Date();
+      if (req.body.notes) {
+        asset.assignedTo.notes = (asset.assignedTo.notes || '') + '\n' + req.body.notes;
+      }
+    }
+
+    await asset.save();
+    res.json(asset);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   PUT /api/assets/:id/inspection
+// @desc    Update inspection schedule
+// @access  Private - Officer/Admin
+router.put('/:id/inspection', auth, authorize('admin', 'officer'), async (req, res) => {
+  try {
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+      return res.status(404).json({ msg: 'Asset not found' });
+    }
+
+    if (!asset.inspectionSchedule) {
+      asset.inspectionSchedule = {};
+    }
+
+    if (req.body.frequency) {
+      asset.inspectionSchedule.frequency = req.body.frequency;
+    }
+    if (req.body.nextInspectionDate) {
+      asset.inspectionSchedule.nextInspectionDate = new Date(req.body.nextInspectionDate);
+    }
+    if (req.body.lastInspectionDate) {
+      asset.inspectionSchedule.lastInspectionDate = new Date(req.body.lastInspectionDate);
+    }
+
+    await asset.save();
+    res.json(asset);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;
+
+
+
+
 

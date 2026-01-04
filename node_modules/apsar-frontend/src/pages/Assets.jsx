@@ -57,7 +57,7 @@ export default function Assets() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Assets</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Assets</h1>
         <Link
           to="/assets/new"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
@@ -79,7 +79,7 @@ export default function Assets() {
                   <CubeIcon className="h-10 w-10 text-gray-400" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{asset.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{asset.name}</h3>
                   <p className="text-sm text-gray-500">#{asset.assetNumber}</p>
                   <div className="mt-2 flex items-center">
                     <span
@@ -110,7 +110,7 @@ export default function Assets() {
       {assets?.length === 0 && (
         <div className="text-center py-12">
           <CubeIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No assets</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No assets</h3>
           <p className="mt-1 text-sm text-gray-500">Get started by adding a new asset.</p>
         </div>
       )}

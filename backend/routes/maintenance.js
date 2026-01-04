@@ -124,7 +124,7 @@ router.post('/', auth,
 // @route   PUT /api/maintenance/:id
 // @desc    Update maintenance record
 // @access  Private - requires operator role or higher
-router.put('/:id', auth, authorize('admin', 'operator', 'technician'), 
+router.put('/:id', auth, authorize('admin', 'officer'), 
   upload.array('attachments', 5), async (req, res) => {
   try {
     const record = await MaintenanceRecord.findById(req.params.id);
@@ -186,7 +186,7 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 // @route   PATCH /api/maintenance/:id/complete
 // @desc    Mark maintenance record as completed
 // @access  Private - requires operator role or higher
-router.patch('/:id/complete', auth, authorize('admin', 'operator', 'technician'), async (req, res) => {
+router.patch('/:id/complete', auth, authorize('admin', 'officer'), async (req, res) => {
   try {
     const record = await MaintenanceRecord.findById(req.params.id);
     if (!record) {
