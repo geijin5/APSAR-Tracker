@@ -45,7 +45,7 @@ router.post('/register', [
       lastName,
       username,
       password,
-      role: role || 'viewer'
+      role: role || 'member'
     });
 
     await user.save();
