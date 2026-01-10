@@ -16,23 +16,20 @@ if (!existsSync(androidDir)) {
   process.exit(0);
 }
 
-// Configure settings.gradle
+// Configure settings.gradle - ensure pluginManagement and dependencyResolutionManagement are at the top
 const settingsGradlePath = join(androidDir, 'settings.gradle');
 if (existsSync(settingsGradlePath)) {
   let settingsContent = readFileSync(settingsGradlePath, 'utf8');
-  let needsUpdate = false;
+  const originalContent = settingsContent;
   
-  // Read current content to check what exists
-  const hasPluginManagement = settingsContent.includes('pluginManagement');
-  const hasDependencyResolutionManagement = settingsContent.includes('dependencyResolutionManagement');
+  // Remove any existing pluginManagement or dependencyResolutionManagement blocks
+  // (we'll add correct ones at the top)
+  settingsContent = settingsContent.replace(/pluginManagement\s*\{[\s\S]*?\}\s*\n?/g, '');
+  settingsContent = settingsContent.replace(/dependencyResolutionManagement\s*\{[\s\S]*?\}\s*\n?/g, '');
+  settingsContent = settingsContent.trim();
   
-  // Build the header blocks that should be at the top
-  let headerBlocks = '';
-  
-  // Add pluginManagement block (must be first)
-  if (!hasPluginManagement) {
-    console.log('📝 Adding pluginManagement block to settings.gradle...');
-    headerBlocks += `pluginManagement {
+  // Build the required header blocks
+  const headerBlocks = `pluginManagement {
     repositories {
         google()
         mavenCentral()
@@ -40,34 +37,7 @@ if (existsSync(settingsGradlePath)) {
     }
 }
 
-`;
-    needsUpdate = true;
-  } else {
-    // Update existing pluginManagement if needed
-    const pluginMgmtMatch = settingsContent.match(/pluginManagement\s*\{[\s\S]*?repositories\s*\{([\s\S]*?)\}/);
-    if (pluginMgmtMatch) {
-      const reposContent = pluginMgmtMatch[1];
-      if (!reposContent.includes('google()') || !reposContent.includes('mavenCentral()') || !reposContent.includes('gradlePluginPortal()')) {
-        console.log('📝 Updating pluginManagement repositories...');
-        settingsContent = settingsContent.replace(
-          /pluginManagement\s*\{[\s\S]*?repositories\s*\{[\s\S]*?\}/,
-          `pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}`
-        );
-        needsUpdate = true;
-      }
-    }
-  }
-  
-  // Add dependencyResolutionManagement block
-  if (!hasDependencyResolutionManagement) {
-    console.log('📝 Adding dependencyResolutionManagement block to settings.gradle...');
-    headerBlocks += `dependencyResolutionManagement {
+dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
@@ -77,54 +47,28 @@ if (existsSync(settingsGradlePath)) {
 }
 
 `;
-    needsUpdate = true;
-  } else {
-    // Update existing dependencyResolutionManagement if needed
-    const drmMatch = settingsContent.match(/dependencyResolutionManagement\s*\{[\s\S]*?repositories\s*\{([\s\S]*?)\}/);
-    if (drmMatch) {
-      const reposContent = drmMatch[1];
-      if (!reposContent.includes('google()') || !reposContent.includes('mavenCentral()') || !reposContent.includes('gradlePluginPortal()')) {
-        console.log('📝 Updating dependencyResolutionManagement repositories...');
-        // Ensure FAIL_ON_PROJECT_REPOS is set
-        settingsContent = settingsContent.replace(
-          /dependencyResolutionManagement\s*\{[\s\S]*?\}/,
-          `dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}`
-        );
-        needsUpdate = true;
-      } else if (!settingsContent.includes('RepositoriesMode.FAIL_ON_PROJECT_REPOS')) {
-        // Add FAIL_ON_PROJECT_REPOS if missing
-        console.log('📝 Adding RepositoriesMode.FAIL_ON_PROJECT_REPOS...');
-        settingsContent = settingsContent.replace(
-          /(dependencyResolutionManagement\s*\{)/,
-          '$1\n    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)'
-        );
-        needsUpdate = true;
-      }
-    }
-  }
   
-  // If we need to add header blocks, prepend them to the file (after removing any existing ones that might be incomplete)
-  if (headerBlocks && (!hasPluginManagement || !hasDependencyResolutionManagement)) {
-    // Remove any existing incomplete blocks at the start
-    settingsContent = settingsContent.replace(/^(pluginManagement\s*\{[\s\S]*?\}\s*\n?)+/, '');
-    settingsContent = settingsContent.replace(/^(dependencyResolutionManagement\s*\{[\s\S]*?\}\s*\n?)+/, '');
-    // Prepend the new header blocks
-    settingsContent = headerBlocks + settingsContent.trim() + '\n';
-    needsUpdate = true;
-  }
-  
-  if (needsUpdate) {
+  // Check if header blocks are already present and correct
+  if (!originalContent.includes('pluginManagement') || !originalContent.includes('dependencyResolutionManagement') || 
+      !originalContent.includes('RepositoriesMode.FAIL_ON_PROJECT_REPOS')) {
+    console.log('📝 Configuring settings.gradle with pluginManagement and dependencyResolutionManagement...');
+    settingsContent = headerBlocks + settingsContent;
     writeFileSync(settingsGradlePath, settingsContent);
     console.log('✅ settings.gradle updated');
   } else {
-    console.log('✅ settings.gradle already configured');
+    // Verify existing blocks have correct repositories
+    const hasGoogle = originalContent.includes('google()');
+    const hasMavenCentral = originalContent.includes('mavenCentral()');
+    const hasFailOnProjectRepos = originalContent.includes('RepositoriesMode.FAIL_ON_PROJECT_REPOS');
+    
+    if (!hasGoogle || !hasMavenCentral || !hasFailOnProjectRepos) {
+      console.log('📝 Updating settings.gradle repositories configuration...');
+      settingsContent = headerBlocks + settingsContent;
+      writeFileSync(settingsGradlePath, settingsContent);
+      console.log('✅ settings.gradle updated');
+    } else {
+      console.log('✅ settings.gradle already configured');
+    }
   }
 } else {
   console.log('⚠️  settings.gradle not found');
@@ -135,22 +79,25 @@ let failOnProjectRepos = false;
 if (existsSync(settingsGradlePath)) {
   const settingsContent = readFileSync(settingsGradlePath, 'utf8');
   failOnProjectRepos = settingsContent.includes('RepositoriesMode.FAIL_ON_PROJECT_REPOS');
+  console.log(`ℹ️  FAIL_ON_PROJECT_REPOS mode: ${failOnProjectRepos ? 'ENABLED' : 'DISABLED'}`);
 }
 
+// Configure build.gradle - ensure buildscript has repositories
 const buildGradlePath = join(androidDir, 'build.gradle');
 if (existsSync(buildGradlePath)) {
   let buildContent = readFileSync(buildGradlePath, 'utf8');
   let modified = false;
   
-  // Always ensure buildscript has repositories (they're exempt from FAIL_ON_PROJECT_REPOS)
+  // ALWAYS ensure buildscript has repositories (they're exempt from FAIL_ON_PROJECT_REPOS)
   if (buildContent.includes('buildscript')) {
-    // Find buildscript block - use a simple approach: find buildscript { and check what's inside
+    // Check if buildscript block has required repositories
     const buildscriptMatch = buildContent.match(/buildscript\s*\{/);
     if (buildscriptMatch) {
       const buildscriptStart = buildscriptMatch.index;
-      // Find the matching closing brace by counting
       let braceCount = 0;
       let buildscriptEnd = -1;
+      
+      // Find the end of buildscript block
       for (let i = buildscriptStart; i < buildContent.length; i++) {
         if (buildContent[i] === '{') braceCount++;
         if (buildContent[i] === '}') {
@@ -170,14 +117,15 @@ if (existsSync(buildGradlePath)) {
         
         if (!hasGoogle || !hasMavenCentral) {
           if (hasReposBlock) {
-            // Replace existing repositories block - find it within buildscript
-            console.log('📝 Updating buildscript repositories...');
-            // Find repositories { ... } block within buildscript
+            // Replace existing repositories block
+            console.log('📝 Updating buildscript repositories (required for classpath dependencies)...');
             const reposMatch = buildscriptSection.match(/repositories\s*\{/);
             if (reposMatch) {
               const reposStart = reposMatch.index;
               let reposBraceCount = 0;
               let reposEnd = -1;
+              
+              // Find end of repositories block
               for (let i = reposStart; i < buildscriptSection.length; i++) {
                 if (buildscriptSection[i] === '{') reposBraceCount++;
                 if (buildscriptSection[i] === '}') {
@@ -188,8 +136,8 @@ if (existsSync(buildGradlePath)) {
                   }
                 }
               }
+              
               if (reposEnd > reposStart) {
-                // Replace the repositories block
                 const beforeRepos = buildscriptSection.substring(0, reposStart);
                 const afterRepos = buildscriptSection.substring(reposEnd + 1);
                 const newReposBlock = 'repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }';
@@ -199,13 +147,12 @@ if (existsSync(buildGradlePath)) {
               }
             }
           } else {
-            // Add repositories block after buildscript {
-            console.log('📝 Adding buildscript repositories...');
+            // Add repositories block right after "buildscript {"
+            console.log('📝 Adding buildscript repositories (required for classpath dependencies)...');
             const insertPos = buildscriptStart + buildscriptMatch[0].length;
-            const beforeRepos = buildContent.substring(0, insertPos);
-            const afterRepos = buildContent.substring(insertPos);
-            const newReposBlock = '\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }';
-            buildContent = beforeRepos + newReposBlock + afterRepos;
+            buildContent = buildContent.substring(0, insertPos) + 
+              '\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }' +
+              buildContent.substring(insertPos);
             modified = true;
           }
         } else {
@@ -213,48 +160,100 @@ if (existsSync(buildGradlePath)) {
         }
       }
     }
+  } else {
+    console.log('⚠️  No buildscript block found in build.gradle');
   }
   
   // Remove repositories from allprojects/subprojects if FAIL_ON_PROJECT_REPOS is enabled
-  // Note: buildscript repositories are exempt and should remain
   if (failOnProjectRepos) {
-    // Simple regex-based removal - for most Gradle files, repositories blocks are simple
-    // Match "allprojects { ... repositories { ... } ... }" and remove the repositories block
-    if (buildContent.includes('allprojects') && buildContent.includes('repositories')) {
-      console.log('📝 Removing repositories from allprojects (not allowed with FAIL_ON_PROJECT_REPOS)...');
-      // Match allprojects block and remove repositories from it (but not from buildscript)
-      // Use a multiline regex that matches repositories blocks not in buildscript
-      buildContent = buildContent.replace(/(allprojects\s*\{[\s\S]*?)repositories\s*\{[\s\S]*?\n\s*\}\s*([\s\S]*?\})/g, '$1$2');
-      modified = true;
+    // Remove from allprojects
+    if (buildContent.includes('allprojects')) {
+      const allprojectsMatch = buildContent.match(/allprojects\s*\{/);
+      if (allprojectsMatch && buildContent.substring(allprojectsMatch.index).includes('repositories')) {
+        console.log('📝 Removing repositories from allprojects (not allowed with FAIL_ON_PROJECT_REPOS)...');
+        // Find allprojects block
+        let braceCount = 0;
+        let allprojectsEnd = -1;
+        for (let i = allprojectsMatch.index; i < buildContent.length; i++) {
+          if (buildContent[i] === '{') braceCount++;
+          if (buildContent[i] === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              allprojectsEnd = i;
+              break;
+            }
+          }
+        }
+        if (allprojectsEnd > allprojectsMatch.index) {
+          const allprojectsSection = buildContent.substring(allprojectsMatch.index, allprojectsEnd + 1);
+          const reposMatch = allprojectsSection.match(/repositories\s*\{/);
+          if (reposMatch) {
+            let reposBraceCount = 0;
+            let reposEnd = -1;
+            for (let i = reposMatch.index; i < allprojectsSection.length; i++) {
+              if (allprojectsSection[i] === '{') reposBraceCount++;
+              if (allprojectsSection[i] === '}') {
+                reposBraceCount--;
+                if (reposBraceCount === 0) {
+                  reposEnd = i;
+                  break;
+                }
+              }
+            }
+            if (reposEnd > reposMatch.index) {
+              const beforeRepos = allprojectsSection.substring(0, reposMatch.index);
+              const afterRepos = allprojectsSection.substring(reposEnd + 1);
+              const updatedSection = beforeRepos + afterRepos;
+              buildContent = buildContent.substring(0, allprojectsMatch.index) + updatedSection + buildContent.substring(allprojectsEnd + 1);
+              modified = true;
+            }
+          }
+        }
+      }
     }
     
-    if (buildContent.includes('subprojects') && buildContent.includes('repositories')) {
-      console.log('📝 Removing repositories from subprojects (not allowed with FAIL_ON_PROJECT_REPOS)...');
-      buildContent = buildContent.replace(/(subprojects\s*\{[\s\S]*?)repositories\s*\{[\s\S]*?\n\s*\}\s*([\s\S]*?\})/g, '$1$2');
-      modified = true;
-    }
-  } else {
-    // If FAIL_ON_PROJECT_REPOS is not enabled, ensure allprojects has repositories
-    if (buildContent.includes('allprojects')) {
-      const allprojectsMatch = buildContent.match(/allprojects\s*\{[\s\S]*?repositories\s*\{([\s\S]*?)\}/);
-      if (allprojectsMatch) {
-        const reposContent = allprojectsMatch[1];
-        if (!reposContent.includes('google()')) {
-          console.log('📝 Adding google() to allprojects repositories...');
-          buildContent = buildContent.replace(
-            /(allprojects\s*\{[\s\S]*?repositories\s*\{)/,
-            '$1\n        google()\n        mavenCentral()'
-          );
-          modified = true;
+    // Remove from subprojects
+    if (buildContent.includes('subprojects')) {
+      const subprojectsMatch = buildContent.match(/subprojects\s*\{/);
+      if (subprojectsMatch && buildContent.substring(subprojectsMatch.index).includes('repositories')) {
+        console.log('📝 Removing repositories from subprojects (not allowed with FAIL_ON_PROJECT_REPOS)...');
+        let braceCount = 0;
+        let subprojectsEnd = -1;
+        for (let i = subprojectsMatch.index; i < buildContent.length; i++) {
+          if (buildContent[i] === '{') braceCount++;
+          if (buildContent[i] === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              subprojectsEnd = i;
+              break;
+            }
+          }
         }
-      } else if (buildContent.includes('allprojects') && !buildContent.match(/allprojects\s*\{[\s\S]*?repositories/)) {
-        // Add repositories block to allprojects if missing
-        console.log('📝 Adding repositories to allprojects...');
-        buildContent = buildContent.replace(
-          /(allprojects\s*\{)/,
-          '$1\n    repositories {\n        google()\n        mavenCentral()\n    }'
-        );
-        modified = true;
+        if (subprojectsEnd > subprojectsMatch.index) {
+          const subprojectsSection = buildContent.substring(subprojectsMatch.index, subprojectsEnd + 1);
+          const reposMatch = subprojectsSection.match(/repositories\s*\{/);
+          if (reposMatch) {
+            let reposBraceCount = 0;
+            let reposEnd = -1;
+            for (let i = reposMatch.index; i < subprojectsSection.length; i++) {
+              if (subprojectsSection[i] === '{') reposBraceCount++;
+              if (subprojectsSection[i] === '}') {
+                reposBraceCount--;
+                if (reposBraceCount === 0) {
+                  reposEnd = i;
+                  break;
+                }
+              }
+            }
+            if (reposEnd > reposMatch.index) {
+              const beforeRepos = subprojectsSection.substring(0, reposMatch.index);
+              const afterRepos = subprojectsSection.substring(reposEnd + 1);
+              const updatedSection = beforeRepos + afterRepos;
+              buildContent = buildContent.substring(0, subprojectsMatch.index) + updatedSection + buildContent.substring(subprojectsEnd + 1);
+              modified = true;
+            }
+          }
+        }
       }
     }
   }
@@ -274,31 +273,61 @@ if (failOnProjectRepos) {
   const appBuildGradlePath = join(androidDir, 'app', 'build.gradle');
   if (existsSync(appBuildGradlePath)) {
     let appBuildContent = readFileSync(appBuildGradlePath, 'utf8');
-    let modified = false;
+    const originalAppContent = appBuildContent;
     
-    // Remove repositories from android block (not allowed with FAIL_ON_PROJECT_REPOS)
-    // But keep buildscript repositories if they exist
-    if (appBuildContent.includes('repositories') && appBuildContent.includes('android')) {
-      // Match repositories inside android block
-      const androidReposMatch = appBuildContent.match(/(android\s*\{[\s\S]*?)repositories\s*\{[^\}]*\}([\s\S]*?\})/);
-      if (androidReposMatch) {
-        console.log('📝 Removing repositories from android block in app/build.gradle...');
-        appBuildContent = appBuildContent.replace(
-          /(android\s*\{[\s\S]*?)repositories\s*\{[^\}]*\}([\s\S]*?\})/,
-          '$1$2'
-        );
-        modified = true;
+    // Remove repositories from android block (if exists)
+    if (appBuildContent.includes('android') && appBuildContent.includes('repositories')) {
+      const androidMatch = appBuildContent.match(/android\s*\{/);
+      if (androidMatch) {
+        let braceCount = 0;
+        let androidEnd = -1;
+        for (let i = androidMatch.index; i < appBuildContent.length; i++) {
+          if (appBuildContent[i] === '{') braceCount++;
+          if (appBuildContent[i] === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              androidEnd = i;
+              break;
+            }
+          }
+        }
+        if (androidEnd > androidMatch.index) {
+          const androidSection = appBuildContent.substring(androidMatch.index, androidEnd + 1);
+          if (/repositories\s*\{/.test(androidSection)) {
+            console.log('📝 Removing repositories from android block in app/build.gradle...');
+            const reposMatch = androidSection.match(/repositories\s*\{/);
+            if (reposMatch) {
+              let reposBraceCount = 0;
+              let reposEnd = -1;
+              for (let i = reposMatch.index; i < androidSection.length; i++) {
+                if (androidSection[i] === '{') reposBraceCount++;
+                if (androidSection[i] === '}') {
+                  reposBraceCount--;
+                  if (reposBraceCount === 0) {
+                    reposEnd = i;
+                    break;
+                  }
+                }
+              }
+              if (reposEnd > reposMatch.index) {
+                const beforeRepos = androidSection.substring(0, reposMatch.index);
+                const afterRepos = androidSection.substring(reposEnd + 1);
+                const updatedSection = beforeRepos + afterRepos;
+                appBuildContent = appBuildContent.substring(0, androidMatch.index) + updatedSection + appBuildContent.substring(androidEnd + 1);
+              }
+            }
+          }
+        }
       }
     }
     
-    // Remove standalone repositories blocks (but not in buildscript)
+    // Remove any standalone repositories blocks (but keep buildscript if it exists)
     if (appBuildContent.includes('repositories') && !appBuildContent.includes('buildscript')) {
-      console.log('📝 Removing repositories from app/build.gradle...');
-      appBuildContent = appBuildContent.replace(/repositories\s*\{[^\}]*\}/g, '');
-      modified = true;
+      // Simple removal - repositories blocks not in buildscript
+      appBuildContent = appBuildContent.replace(/^\s*repositories\s*\{[\s\S]*?\}\s*$/gm, '');
     }
     
-    if (modified) {
+    if (appBuildContent !== originalAppContent) {
       writeFileSync(appBuildGradlePath, appBuildContent);
       console.log('✅ app/build.gradle cleaned');
     } else {
@@ -335,7 +364,6 @@ for (const [key, value] of Object.entries(propertiesToAdd)) {
     gradleProps += `\n${key}=${value}`;
     propsUpdated = true;
   } else {
-    // Update if value is different
     const currentMatch = gradleProps.match(regex);
     if (currentMatch && !currentMatch[0].includes(value)) {
       console.log(`📝 Updating ${key} in gradle.properties...`);
