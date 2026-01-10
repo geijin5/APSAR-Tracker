@@ -12,6 +12,7 @@ import {
   UserGroupIcon
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function Chat() {
   const { user } = useAuth();
@@ -21,6 +22,9 @@ export default function Chat() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Initialize notifications for chat
+  useNotifications();
 
   // Fetch conversations (includes groups and 1-on-1)
   const { data: conversations, isLoading: isLoadingConversations, error: conversationsError } = useQuery({
