@@ -111,8 +111,11 @@ jobs:
         run: |
           if [ -d "android" ]; then
             echo "Configuring Gradle repositories..."
-            node scripts/configure-gradle-repos.js
-            echo "✅ Repository configuration completed"
+            if node scripts/configure-gradle-repos.js; then
+              echo "✅ Repository configuration script completed"
+            else
+              echo "⚠️  Repository configuration script had errors, but continuing..."
+            fi
             
             # Verify configuration
             echo ""
@@ -120,14 +123,29 @@ jobs:
             if [ -f "android/settings.gradle" ]; then
               echo "settings.gradle repositories:"
               grep -A 10 "repositories {" android/settings.gradle | head -15 || echo "Could not parse repositories"
+            else
+              echo "⚠️  settings.gradle not found"
             fi
             if [ -f "android/gradle.properties" ]; then
               echo ""
               echo "gradle.properties network settings:"
               grep -E "(connectionTimeout|socketTimeout|keepAlive|maxConnections)" android/gradle.properties || echo "No network settings found"
+            else
+              echo "⚠️  gradle.properties not found"
+            fi
+            
+            # Check Gradle wrapper
+            if [ -f "android/gradlew" ]; then
+              echo ""
+              echo "✅ Gradle wrapper found"
+              chmod +x android/gradlew
+              echo "Gradle wrapper version:"
+              android/gradlew --version || echo "Could not get Gradle version"
+            else
+              echo "⚠️  Gradle wrapper not found in android directory"
             fi
           else
-            echo "⚠️  Android directory not found"
+            echo "❌ Android directory not found"
             exit 1
           fi
       
@@ -148,26 +166,114 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         continue-on-error: true
       
+      - name: Verify build environment
+        working-directory: ./frontend/android
+        run: |
+          echo "🔍 Build Environment Diagnostics:"
+          echo "=================================="
+          echo ""
+          echo "Java version:"
+          java -version || echo "Java not found"
+          echo ""
+          echo "Android SDK:"
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          ls -la $ANDROID_HOME 2>/dev/null || echo "ANDROID_HOME not set or invalid"
+          echo ""
+          echo "Gradle wrapper:"
+          if [ -f "./gradlew" ]; then
+            ./gradlew --version || echo "Gradle wrapper found but version check failed"
+          else
+            echo "❌ Gradle wrapper not found!"
+            exit 1
+          fi
+          echo ""
+          echo "Android project structure:"
+          ls -la . 2>/dev/null || echo "Could not list Android directory"
+          if [ -f "settings.gradle" ]; then
+            echo "✅ settings.gradle exists"
+          else
+            echo "⚠️  settings.gradle missing"
+          fi
+          if [ -f "build.gradle" ]; then
+            echo "✅ build.gradle exists"
+          else
+            echo "⚠️  build.gradle missing"
+          fi
+          if [ -d "app" ]; then
+            echo "✅ app directory exists"
+          else
+            echo "⚠️  app directory missing"
+          fi
+          echo ""
+      
       - name: Build Android APK with retry
         working-directory: ./frontend/android
         run: |
           echo "Building APK with Gradle..."
           chmod +x ./gradlew || true
           
+          # Verify Gradle wrapper exists and is executable
+          if [ ! -f "./gradlew" ]; then
+            echo "❌ Gradle wrapper not found!"
+            exit 1
+          fi
+          
           # Retry logic for network issues
           MAX_RETRIES=3
           RETRY_COUNT=0
+          BUILD_ERROR=""
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if ./gradlew clean assembleDebug --no-daemon --stacktrace --refresh-dependencies; then
+            echo "🔨 Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+            
+            # Capture output to file and display
+            set +e  # Don't exit on error
+            ./gradlew clean assembleDebug --no-daemon --stacktrace --refresh-dependencies 2>&1 | tee gradle-build.log
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
+            set -e  # Exit on error again
+            
+            if [ $BUILD_EXIT_CODE -eq 0 ]; then
               echo "✅ APK build completed successfully"
               exit 0
             else
               RETRY_COUNT=$((RETRY_COUNT + 1))
+              
+              # Extract error output
+              echo ""
+              echo "❌ Build failed with exit code: $BUILD_EXIT_CODE"
+              echo "Last 100 lines of build output:"
+              echo "=========================================="
+              tail -100 gradle-build.log 2>/dev/null || cat gradle-build.log
+              echo "=========================================="
+              
+              # Show specific error patterns if found
+              if grep -i "403\|forbidden" gradle-build.log > /dev/null 2>&1; then
+                echo ""
+                echo "⚠️  Detected 403/Forbidden error - repository access issue"
+              fi
+              if grep -i "connection\|timeout\|network" gradle-build.log > /dev/null 2>&1; then
+                echo ""
+                echo "⚠️  Detected network/connection issue"
+              fi
+              if grep -i "dependency\|resolve" gradle-build.log > /dev/null 2>&1; then
+                echo ""
+                echo "⚠️  Detected dependency resolution issue"
+              fi
+              
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "⚠️  Build failed, retrying in 10 seconds... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
-                sleep 10
+                echo ""
+                echo "⚠️  Retrying in 15 seconds... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+                sleep 15
               else
+                echo ""
                 echo "❌ Build failed after $MAX_RETRIES attempts"
+                echo ""
+                echo "Common issues to check:"
+                echo "  1. Missing dependencies or repositories"
+                echo "  2. Java version compatibility (using Java 17)"
+                echo "  3. Android SDK version issues"
+                echo "  4. Gradle version compatibility"
+                echo "  5. Network/repository access issues"
                 exit 1
               fi
             fi
