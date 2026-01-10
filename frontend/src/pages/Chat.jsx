@@ -9,7 +9,9 @@ import {
   ChatBubbleLeftRightIcon,
   PlusIcon,
   TrashIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  XMarkIcon,
+  Bars3Icon
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { useNotifications } from '../hooks/useNotifications';
@@ -235,6 +237,7 @@ export default function Chat() {
   };
 
   const unreadCount = unreadData?.unreadCount || 0;
+  const [showConversations, setShowConversations] = useState(true);
 
   // Separate conversations into groups and 1-on-1
   // Use groups query as fallback if conversations hasn't loaded yet
@@ -252,29 +255,53 @@ export default function Chat() {
     })) || []);
   const oneOnOneConversations = conversations?.filter(c => c.type === 'user') || [];
 
+  // Hide conversations on mobile when a conversation is selected
+  useEffect(() => {
+    if (selectedConversation && window.innerWidth < 640) {
+      setShowConversations(false);
+    } else if (!selectedConversation) {
+      setShowConversations(true);
+    }
+  }, [selectedConversation]);
+
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      <div className="mb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
-          <p className="text-sm text-gray-500 mt-1">Chat with team members and groups</p>
+    <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">Messages</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Chat with team members and groups</p>
         </div>
         <button
           onClick={() => setShowCreateGroup(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto touch-manipulation"
         >
           <PlusIcon className="h-5 w-5" />
-          New Group
+          <span className="hidden sm:inline">New Group</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
-      <div className="flex-1 flex gap-4 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="flex-1 flex flex-col sm:flex-row gap-0 sm:gap-4 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         {/* Conversations Sidebar */}
-        <div className="w-80 border-r border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Conversations</h2>
-            {unreadCount > 0 && (
-              <p className="text-xs text-primary-600 mt-1">{unreadCount} unread message{unreadCount !== 1 ? 's' : ''}</p>
+        <div className={`${showConversations && selectedConversation ? 'hidden' : 'flex'} sm:flex w-full sm:w-80 border-r border-gray-200 flex-col ${selectedConversation ? 'sm:flex' : 'flex'} transition-all`}>
+          <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Conversations</h2>
+              {unreadCount > 0 && (
+                <p className="text-xs text-primary-600 mt-1">{unreadCount} unread message{unreadCount !== 1 ? 's' : ''}</p>
+              )}
+            </div>
+            {selectedConversation && (
+              <button
+                onClick={() => {
+                  setShowConversations(false);
+                  setSelectedConversation(null);
+                }}
+                className="sm:hidden ml-2 p-2 text-gray-400 hover:text-gray-600 rounded-md touch-manipulation"
+                aria-label="Close conversations"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             )}
           </div>
 
@@ -295,9 +322,12 @@ export default function Chat() {
                     return (
                       <button
                         key={conversation.group?._id || conversation.group?.type}
-                        onClick={() => setSelectedConversation(conversation)}
-                        className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                          isSelected ? 'bg-primary-50 border-l-4 border-primary-600' : ''
+                        onClick={() => {
+                          setSelectedConversation(conversation);
+                          setShowConversations(false);
+                        }}
+                        className={`w-full p-3 sm:p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation ${
+                          isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-primary-600' : ''
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -355,9 +385,12 @@ export default function Chat() {
                     return (
                       <button
                         key={conversation.user._id}
-                        onClick={() => setSelectedConversation(conversation)}
-                        className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                          isSelected ? 'bg-primary-50 border-l-4 border-primary-600' : ''
+                        onClick={() => {
+                          setSelectedConversation(conversation);
+                          setShowConversations(false);
+                        }}
+                        className={`w-full p-3 sm:p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation ${
+                          isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-primary-600' : ''
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -429,36 +462,47 @@ export default function Chat() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden sm:flex' : 'flex'}`}>
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  {/* Back button for mobile */}
+                  <button
+                    onClick={() => {
+                      setShowConversations(true);
+                      setSelectedConversation(null);
+                    }}
+                    className="sm:hidden p-1.5 -ml-1 mr-1 text-gray-400 hover:text-gray-600 rounded-md touch-manipulation"
+                    aria-label="Back to conversations"
+                  >
+                    <Bars3Icon className="h-5 w-5" />
+                  </button>
                   {selectedConversation.type === 'group' ? (
                     <>
-                      <div className="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white">
-                        <UserGroupIcon className="h-5 w-5" />
+                      <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                        <UserGroupIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm sm:text-base">
                           {getConversationDisplayName(selectedConversation)}
                         </h3>
                         {selectedConversation.group?.description && (
-                          <p className="text-xs text-gray-500">{selectedConversation.group.description}</p>
+                          <p className="text-xs text-gray-500 truncate hidden sm:block">{selectedConversation.group.description}</p>
                         )}
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="h-10 w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm">
                         {selectedConversation.user.firstName?.[0]}{selectedConversation.user.lastName?.[0]}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm sm:text-base">
                           {getConversationDisplayName(selectedConversation)}
                         </h3>
-                        <p className="text-xs text-gray-500 capitalize">{selectedConversation.user.role}</p>
+                        <p className="text-xs text-gray-500 capitalize hidden sm:block">{selectedConversation.user.role}</p>
                       </div>
                     </>
                   )}
@@ -467,17 +511,17 @@ export default function Chat() {
                   <button
                     onClick={handleClearChat}
                     disabled={clearChatMutation.isLoading}
-                    className="btn-secondary flex items-center gap-2 text-sm"
+                    className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 touch-manipulation"
                     title="Clear all messages"
                   >
                     <TrashIcon className="h-4 w-4" />
-                    Clear Chat
+                    <span className="hidden sm:inline">Clear Chat</span>
                   </button>
                 )}
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
                 {messages && messages.length > 0 ? (
                   messages.map((message) => {
                     const isExternal = message.isExternal;
@@ -568,19 +612,20 @@ export default function Chat() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-3 sm:p-4 border-t border-gray-200">
                 {attachments.length > 0 && (
                   <div className="mb-2 flex flex-wrap gap-2">
                     {attachments.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded text-xs"
+                        className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-2 py-1.5 rounded text-xs"
                       >
-                        <span className="text-gray-700 dark:text-gray-300">{file.name}</span>
+                        <span className="text-gray-700 dark:text-gray-300 truncate max-w-[150px] sm:max-w-none">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeAttachment(idx)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-800 touch-manipulation p-1 -mr-1"
+                          aria-label="Remove attachment"
                         >
                           ×
                         </button>
@@ -589,7 +634,7 @@ export default function Chat() {
                   </div>
                 )}
                 <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-                  <label className="btn-secondary p-2 cursor-pointer">
+                  <label className="btn-secondary p-2 sm:p-2.5 cursor-pointer touch-manipulation flex-shrink-0">
                     <PaperClipIcon className="h-5 w-5" />
                     <input
                       type="file"
@@ -603,7 +648,7 @@ export default function Chat() {
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 input resize-none"
+                    className="flex-1 input resize-none text-sm sm:text-base min-h-[44px]"
                     rows={2}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -615,7 +660,8 @@ export default function Chat() {
                   <button
                     type="submit"
                     disabled={sendMessageMutation.isLoading || (!messageText.trim() && attachments.length === 0)}
-                    className="btn-primary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary p-2 sm:p-2.5 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    aria-label="Send message"
                   >
                     <PaperAirplaneIcon className="h-5 w-5" />
                   </button>
@@ -623,10 +669,10 @@ export default function Chat() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
+            <div className="flex-1 flex items-center justify-center text-gray-400 p-4">
               <div className="text-center">
-                <ChatBubbleLeftRightIcon className="h-16 w-16 mx-auto mb-4" />
-                <p className="text-lg">Select a conversation to start chatting</p>
+                <ChatBubbleLeftRightIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-lg">Select a conversation to start chatting</p>
               </div>
             </div>
           )}
@@ -635,21 +681,22 @@ export default function Chat() {
 
       {/* Create Group Modal */}
       {showCreateGroup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full my-auto max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleCreateGroup}>
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Group</h2>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-10">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Group</h2>
                 <button
                   type="button"
                   onClick={() => setShowCreateGroup(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-1 touch-manipulation"
+                  aria-label="Close"
                 >
-                  ×
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name *</label>
                   <input
@@ -695,18 +742,18 @@ export default function Chat() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setShowCreateGroup(false)}
-                  className="btn-secondary"
+                  className="btn-secondary w-full sm:w-auto touch-manipulation min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createGroupMutation.isLoading}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto touch-manipulation min-h-[44px]"
                 >
                   {createGroupMutation.isLoading ? 'Creating...' : 'Create Group'}
                 </button>

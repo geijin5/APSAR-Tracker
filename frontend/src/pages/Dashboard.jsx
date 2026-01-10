@@ -387,16 +387,16 @@ export default function Dashboard() {
   // Section components mapping
   const sectionComponents = {
     stats: (
-      <div key="stats" className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div key="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
         {statCards.map((stat) => (
-          <div key={stat.name} className="stat-card group cursor-pointer transition-all hover:scale-105 bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 border border-gray-200 dark:border-gray-700 border-l-4 border-primary-500">
+          <div key={stat.name} className="stat-card group cursor-pointer transition-all hover:scale-105 active:scale-95 sm:active:scale-105 bg-white dark:bg-gray-800 shadow-md rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 border-l-4 border-primary-500">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.name}</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 truncate">{stat.name}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
               </div>
-              <div className={`${stat.color} flex-shrink-0 p-4 rounded-xl shadow-md group-hover:shadow-lg transition-all`}>
-                <stat.icon className="h-8 w-8 text-white" />
+              <div className={`${stat.color} flex-shrink-0 p-3 sm:p-4 rounded-xl shadow-md group-hover:shadow-lg transition-all ml-2`}>
+                <stat.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
             </div>
           </div>
