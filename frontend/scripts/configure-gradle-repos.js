@@ -111,84 +111,150 @@ ${newReposContent}    }
   console.log('⚠️  settings.gradle not found');
 }
 
-// Configure build.gradle (project level)
-const buildGradlePath = join(androidDir, 'build.gradle');
-if (existsSync(buildGradlePath)) {
-  let buildContent = readFileSync(buildGradlePath, 'utf8');
-  let needsUpdate = false;
-  
-  // Update buildscript repositories
-  if (buildContent.includes('buildscript')) {
-    const buildscriptRegex = /buildscript\s*\{[^}]*repositories\s*\{([^}]*)\}/s;
-    const match = buildContent.match(buildscriptRegex);
-    
-    if (match) {
-      const reposContent = match[1];
-      if (!reposContent.includes('google()')) {
-        console.log('📝 Adding google() to buildscript repositories in build.gradle...');
-        buildContent = buildContent.replace(
-          buildscriptRegex,
-          (fullMatch, repos) => {
-            return fullMatch.replace(
-              /repositories\s*\{/,
-              `repositories {\n        google()\n        mavenCentral()`
-            );
-          }
-        );
-        needsUpdate = true;
-      }
-    }
-  }
-  
-  // Update allprojects repositories
-  if (buildContent.includes('allprojects')) {
-    const allprojectsRegex = /allprojects\s*\{[^}]*repositories\s*\{([^}]*)\}/s;
-    const match = buildContent.match(allprojectsRegex);
-    
-    if (match) {
-      const reposContent = match[1];
-      if (!reposContent.includes('google()')) {
-        console.log('📝 Adding google() to allprojects repositories in build.gradle...');
-        buildContent = buildContent.replace(
-          allprojectsRegex,
-          (fullMatch, repos) => {
-            return fullMatch.replace(
-              /repositories\s*\{/,
-              `repositories {\n        google()\n        mavenCentral()`
-            );
-          }
-        );
-        needsUpdate = true;
-      }
-    }
-  }
-  
-  if (needsUpdate) {
-    writeFileSync(buildGradlePath, buildContent);
-    console.log('✅ build.gradle updated');
-  } else {
-    console.log('✅ build.gradle already configured');
-  }
-} else {
-  console.log('⚠️  build.gradle not found');
+// Check if FAIL_ON_PROJECT_REPOS mode is enabled in settings.gradle
+// If so, we should NOT add repositories to build.gradle files
+let failOnProjectRepos = false;
+if (existsSync(settingsGradlePath)) {
+  const settingsContent = readFileSync(settingsGradlePath, 'utf8');
+  failOnProjectRepos = settingsContent.includes('RepositoriesMode.FAIL_ON_PROJECT_REPOS');
 }
 
-// Configure app/build.gradle
-const appBuildGradlePath = join(androidDir, 'app', 'build.gradle');
-if (existsSync(appBuildGradlePath)) {
-  let appBuildContent = readFileSync(appBuildGradlePath, 'utf8');
+if (failOnProjectRepos) {
+  console.log('ℹ️  RepositoriesMode.FAIL_ON_PROJECT_REPOS is enabled - repositories must only be in settings.gradle');
+  console.log('⚠️  Ensuring no repositories are defined in build.gradle files...');
   
-  // Check if there are any repository blocks in app/build.gradle
-  if (appBuildContent.includes('repositories')) {
-    console.log('📝 Checking app/build.gradle for repositories...');
-    // Usually app/build.gradle doesn't have repositories, but if it does, ensure google() is there
-    if (appBuildContent.includes('repositories') && !appBuildContent.includes('google()')) {
-      appBuildContent = appBuildContent.replace(
-        /repositories\s*\{/,
-        'repositories {\n        google()\n        mavenCentral()'
+  // Remove repositories from build.gradle if they exist
+  const buildGradlePath = join(androidDir, 'build.gradle');
+  if (existsSync(buildGradlePath)) {
+    let buildContent = readFileSync(buildGradlePath, 'utf8');
+    let modified = false;
+    
+    // Remove repositories block from buildscript if it exists
+    if (buildContent.includes('buildscript') && buildContent.includes('repositories')) {
+      console.log('📝 Removing repositories block from buildscript in build.gradle...');
+      // Match: buildscript { ... repositories { ... } ... }
+      buildContent = buildContent.replace(
+        /(buildscript\s*\{[^}]*?)repositories\s*\{[^}]*?\}([^}]*?\})/gs,
+        '$1$2'
       );
+      modified = true;
+    }
+    
+    // Remove repositories block from allprojects if it exists
+    if (buildContent.includes('allprojects') && buildContent.includes('repositories')) {
+      console.log('📝 Removing repositories block from allprojects in build.gradle...');
+      // Match: allprojects { ... repositories { ... } ... }
+      buildContent = buildContent.replace(
+        /(allprojects\s*\{[^}]*?)repositories\s*\{[^}]*?\}([^}]*?\})/gs,
+        '$1$2'
+      );
+      modified = true;
+    }
+    
+    if (modified) {
+      writeFileSync(buildGradlePath, buildContent);
+      console.log('✅ build.gradle cleaned (repositories removed)');
+    } else {
+      console.log('✅ build.gradle has no repository blocks to remove');
+    }
+  }
+  
+  // Remove repositories from app/build.gradle if they exist
+  const appBuildGradlePath = join(androidDir, 'app', 'build.gradle');
+  if (existsSync(appBuildGradlePath)) {
+    let appBuildContent = readFileSync(appBuildGradlePath, 'utf8');
+    if (appBuildContent.includes('repositories')) {
+      console.log('📝 Removing repositories block from app/build.gradle...');
+      appBuildContent = appBuildContent.replace(/repositories\s*\{[^}]*?\}/gs, '');
       writeFileSync(appBuildGradlePath, appBuildContent);
-      console.log('✅ app/build.gradle updated');
+      console.log('✅ app/build.gradle cleaned (repositories removed)');
+    }
+  }
+  
+  console.log('✅ All repositories are configured in settings.gradle via dependencyResolutionManagement');
+} else {
+  // If FAIL_ON_PROJECT_REPOS is not enabled, we can add repositories to build.gradle
+  console.log('ℹ️  RepositoriesMode.FAIL_ON_PROJECT_REPOS is not enabled - configuring build.gradle repositories');
+  
+  // Configure build.gradle (project level)
+  const buildGradlePath = join(androidDir, 'build.gradle');
+  if (existsSync(buildGradlePath)) {
+    let buildContent = readFileSync(buildGradlePath, 'utf8');
+    let needsUpdate = false;
+    
+    // Update buildscript repositories
+    if (buildContent.includes('buildscript')) {
+      const buildscriptRegex = /buildscript\s*\{[^}]*repositories\s*\{([^}]*)\}/s;
+      const match = buildContent.match(buildscriptRegex);
+      
+      if (match) {
+        const reposContent = match[1];
+        if (!reposContent.includes('google()')) {
+          console.log('📝 Adding google() to buildscript repositories in build.gradle...');
+          buildContent = buildContent.replace(
+            buildscriptRegex,
+            (fullMatch, repos) => {
+              return fullMatch.replace(
+                /repositories\s*\{/,
+                `repositories {\n        google()\n        mavenCentral()`
+              );
+            }
+          );
+          needsUpdate = true;
+        }
+      }
+    }
+    
+    // Update allprojects repositories
+    if (buildContent.includes('allprojects')) {
+      const allprojectsRegex = /allprojects\s*\{[^}]*repositories\s*\{([^}]*)\}/s;
+      const match = buildContent.match(allprojectsRegex);
+      
+      if (match) {
+        const reposContent = match[1];
+        if (!reposContent.includes('google()')) {
+          console.log('📝 Adding google() to allprojects repositories in build.gradle...');
+          buildContent = buildContent.replace(
+            allprojectsRegex,
+            (fullMatch, repos) => {
+              return fullMatch.replace(
+                /repositories\s*\{/,
+                `repositories {\n        google()\n        mavenCentral()`
+              );
+            }
+          );
+          needsUpdate = true;
+        }
+      }
+    }
+    
+    if (needsUpdate) {
+      writeFileSync(buildGradlePath, buildContent);
+      console.log('✅ build.gradle updated');
+    } else {
+      console.log('✅ build.gradle already configured');
+    }
+  } else {
+    console.log('⚠️  build.gradle not found');
+  }
+
+  // Configure app/build.gradle
+  const appBuildGradlePath = join(androidDir, 'app', 'build.gradle');
+  if (existsSync(appBuildGradlePath)) {
+    let appBuildContent = readFileSync(appBuildGradlePath, 'utf8');
+    
+    // Check if there are any repository blocks in app/build.gradle
+    if (appBuildContent.includes('repositories')) {
+      console.log('📝 Checking app/build.gradle for repositories...');
+      // Usually app/build.gradle doesn't have repositories, but if it does, ensure google() is there
+      if (appBuildContent.includes('repositories') && !appBuildContent.includes('google()')) {
+        appBuildContent = appBuildContent.replace(
+          /repositories\s*\{/,
+          'repositories {\n        google()\n        mavenCentral()'
+        );
+        writeFileSync(appBuildGradlePath, appBuildContent);
+        console.log('✅ app/build.gradle updated');
+      }
     }
   }
 }
