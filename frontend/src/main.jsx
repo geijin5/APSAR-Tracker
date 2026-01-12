@@ -7,7 +7,26 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
 
-const queryClient = new QueryClient()
+// Add global error handler
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+  // Don't prevent default - let error boundary handle it
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  // Prevent default to avoid console error spam
+  event.preventDefault();
+});
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 // Register service workers asynchronously - don't block app startup
 if ('serviceWorker' in navigator) {
@@ -56,17 +75,42 @@ if ('serviceWorker' in navigator) {
 }
 
 // Render app immediately - don't wait for service workers
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  </React.StrictMode>,
-)
+try {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('Root element not found');
+  }
+
+  const root = ReactDOM.createRoot(rootElement);
+  
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </QueryClientProvider>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+  
+  console.log('App rendered successfully');
+} catch (error) {
+  console.error('Failed to render app:', error);
+  // Fallback UI
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div style="padding: 20px; font-family: sans-serif;">
+        <h1>App Failed to Load</h1>
+        <p>Error: ${error.message}</p>
+        <button onclick="window.location.reload()">Reload Page</button>
+        <pre style="background: #f0f0f0; padding: 10px; margin-top: 10px; overflow: auto;">${error.stack || error.toString()}</pre>
+      </div>
+    `;
+  }
+}
 

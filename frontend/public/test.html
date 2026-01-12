@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Test</title>
+</head>
+<body>
+  <h1>Debug Test</h1>
+  <div id="status">Loading...</div>
+  <script>
+    try {
+      document.getElementById('status').innerHTML = 'JavaScript is working';
+      console.log('Basic JavaScript works');
+      
+      // Test localStorage
+      try {
+        localStorage.setItem('test', 'works');
+        localStorage.removeItem('test');
+        console.log('localStorage works');
+      } catch (e) {
+        console.error('localStorage error:', e);
+      }
+      
+      // Test service worker
+      if ('serviceWorker' in navigator) {
+        console.log('ServiceWorker supported');
+      } else {
+        console.log('ServiceWorker NOT supported');
+      }
+      
+      // Test fetch
+      fetch('/api/health').catch(e => console.log('Fetch test (expected to fail):', e.message));
+      
+    } catch (e) {
+      document.getElementById('status').innerHTML = 'Error: ' + e.message;
+      console.error('Error:', e);
+    }
+  </script>
+</body>
+</html>
+
