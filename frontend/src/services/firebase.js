@@ -134,7 +134,7 @@ export const getFCMToken = () => {
  */
 export const onMessageListener = (callback) => {
   if (!messaging) {
-    console.warn('Firebase Messaging not available');
+    console.warn('Firebase Messaging not available (non-critical)');
     return () => {};
   }
 
@@ -142,11 +142,15 @@ export const onMessageListener = (callback) => {
     return onMessage(messaging, (payload) => {
       console.log('Message received in foreground:', payload);
       if (callback) {
-        callback(payload);
+        try {
+          callback(payload);
+        } catch (err) {
+          console.warn('Error in message callback (non-critical):', err);
+        }
       }
     });
   } catch (error) {
-    console.error('Error setting up message listener:', error);
+    console.warn('Error setting up message listener (non-critical):', error);
     return () => {};
   }
 };
