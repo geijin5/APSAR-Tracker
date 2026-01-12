@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { Capacitor } from '@capacitor/core'
 
 // Determine API URL based on platform
 const getApiUrl = () => {
@@ -8,16 +7,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL
   }
   
-  // For Android, use the configured server URL or default
-  if (Capacitor.isNativePlatform()) {
-    // In production, this should be your backend server URL
-    // For development, Android emulator uses 10.0.2.2 instead of localhost
-    return Capacitor.getPlatform() === 'android' 
-      ? 'http://10.0.2.2:5000/api'  // Android emulator
-      : 'https://your-backend-url.com/api'  // Production
-  }
-  
-  // For web, use relative path (proxied by Vite in dev)
+  // For web (PWA), use relative path (proxied by Vite in dev, works in production)
   return '/api'
 }
 
