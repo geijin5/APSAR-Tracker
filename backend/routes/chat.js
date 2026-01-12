@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { sendNotificationToUser } = require('../services/firebaseAdmin');
 
 // Predefined group types
 const PREDEFINED_GROUPS = ['main', 'parade', 'training', 'callout'];
@@ -372,6 +373,93 @@ router.post('/messages', auth, upload.array('attachments', 5), async (req, res) 
     const populated = await Message.findById(message._id)
       .populate('sender', 'firstName lastName username')
       .populate('recipient', 'firstName lastName username');
+
+    // Send push notifications to recipients
+    try {
+      const senderName = `${populated.sender.firstName} ${populated.sender.lastName}`;
+      let recipientUsers = [];
+
+      if (messageData.recipient) {
+        // 1-on-1 message - notify recipient
+        const recipient = await User.findById(messageData.recipient);
+        if (recipient && recipient._id.toString() !== req.user.id.toString()) {
+          recipientUsers.push(recipient);
+        }
+      } else if (messageData.groupType) {
+        // Group message - notify all group members except sender
+        const groupType = messageData.groupType;
+        const groupName = messageData.groupName;
+
+        let query = {};
+        if (groupType === 'custom' && groupName) {
+          // For custom groups, get all users (or implement group membership logic)
+          query = { _id: { $ne: req.user.id } };
+        } else {
+          // For system groups, notify all active users except sender
+          query = { 
+            _id: { $ne: req.user.id },
+            isActive: true 
+          };
+        }
+
+        recipientUsers = await User.find(query);
+      }
+
+      // Send notifications to all recipients
+      const notificationPromises = recipientUsers.map(async (user) => {
+        try {
+          const notificationTitle = messageData.groupType 
+            ? (messageData.groupName || messageData.groupType) 
+            : senderName;
+          
+          const notificationBody = populated.content.length > 100 
+            ? populated.content.substring(0, 100) + '...' 
+            : populated.content;
+
+          const notificationData = {
+            type: 'chat',
+            conversationId: messageData.groupType 
+              ? `${messageData.groupType}${messageData.groupName ? `-${messageData.groupName}` : ''}`
+              : messageData.recipient,
+            messageId: populated._id.toString(),
+            senderId: req.user.id.toString(),
+            senderName: senderName,
+            url: messageData.groupType 
+              ? `/chat`
+              : `/chat`
+          };
+
+          const result = await sendNotificationToUser(
+            user,
+            {
+              title: notificationTitle,
+              body: `${senderName}: ${notificationBody}`,
+              icon: '/logo.png',
+              badge: '/logo.png'
+            },
+            notificationData
+          );
+
+          // Remove invalid tokens
+          if (result.invalidTokens && result.invalidTokens.length > 0) {
+            user.fcmTokens = user.fcmTokens.filter(
+              t => !result.invalidTokens.includes(t.token)
+            );
+            await user.save();
+          }
+        } catch (error) {
+          console.error(`Error sending notification to user ${user._id}:`, error);
+        }
+      });
+
+      // Send notifications in parallel (don't await to avoid blocking response)
+      Promise.all(notificationPromises).catch(err => {
+        console.error('Error sending some notifications:', err);
+      });
+    } catch (notificationError) {
+      // Don't fail the request if notification sending fails
+      console.error('Error sending push notifications:', notificationError);
+    }
 
     res.status(201).json(populated);
   } catch (err) {

@@ -37,6 +37,23 @@ const userSchema = new mongoose.Schema({
     expiryDate: Date,
     issuingAuthority: String
   }],
+  // FCM tokens for push notifications (users can have multiple devices)
+  fcmTokens: [{
+    token: {
+      type: String,
+      required: true,
+      unique: true,
+      sparse: true
+    },
+    deviceInfo: {
+      userAgent: String,
+      platform: String
+    },
+    registeredAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   isActive: {
     type: Boolean,
     default: true

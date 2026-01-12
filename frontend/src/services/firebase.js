@@ -158,8 +158,8 @@ export const showNotification = (title, options = {}) => {
   if (Notification.permission === 'granted') {
     const notificationOptions = {
       body: options.body || '',
-      icon: options.icon || '/icon-192.png',
-      badge: options.badge || '/icon-192.png',
+      icon: options.icon || '/logo.png', // Use logo for notification icon
+      badge: options.badge || '/logo.png', // Use logo for badge
       tag: options.tag || 'apsar-chat',
       requireInteraction: options.requireInteraction || false,
       data: options.data || {},
@@ -198,7 +198,7 @@ export const handleChatNotification = (payload) => {
   if (notification) {
     showNotification(notification.title, {
       body: notification.body,
-      icon: notification.icon || '/icon-192.png',
+      icon: notification.icon || '/logo.png', // Use logo for notification icon
       tag: `chat-${data?.conversationId || 'message'}`,
       data: {
         conversationId: data?.conversationId,
@@ -222,7 +222,7 @@ export const handleChatNotification = (payload) => {
     
     showNotification(title, {
       body: body,
-      icon: '/icon-192.png',
+      icon: '/logo.png', // Use logo for notification icon
       tag: `chat-${data.conversationId || data.messageId || 'message'}`,
       data: {
         conversationId: data.conversationId,

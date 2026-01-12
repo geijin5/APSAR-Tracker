@@ -6,6 +6,7 @@ import {
   handleChatNotification,
   getFCMToken 
 } from '../services/firebase';
+import api from '../services/api';
 
 /**
  * Hook for managing chat notifications
@@ -17,11 +18,21 @@ export const useNotifications = () => {
   // Request notification permission on mount if user is logged in
   useEffect(() => {
     if (user) {
-      requestNotificationPermission().then((token) => {
+      requestNotificationPermission().then(async (token) => {
         if (token) {
           console.log('Notification permission granted, token:', token);
-          // TODO: Send token to backend to register for push notifications
-          // This would typically be done via an API call to /api/notifications/register-token
+          // Register token with backend
+          try {
+            const deviceInfo = {
+              userAgent: navigator.userAgent,
+              platform: navigator.platform,
+              language: navigator.language
+            };
+            await api.post('/notifications/register-token', { token, deviceInfo });
+            console.log('FCM token registered with backend');
+          } catch (error) {
+            console.error('Error registering FCM token with backend:', error);
+          }
         }
       }).catch(console.error);
     }
@@ -56,4 +67,5 @@ export const useNotifications = () => {
     getToken
   };
 };
+
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
@@ -260,5 +261,94 @@ router.delete('/read/all', auth, async (req, res) => {
   }
 });
 
+// @route   POST /api/notifications/register-token
+// @desc    Register FCM token for push notifications
+// @access  Private
+router.post('/register-token', auth, [
+  body('token').notEmpty().trim().withMessage('FCM token is required'),
+  body('deviceInfo').optional().isObject()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, deviceInfo } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Check if token already exists
+    const existingTokenIndex = user.fcmTokens.findIndex(
+      t => t.token === token
+    );
+
+    if (existingTokenIndex >= 0) {
+      // Update existing token with new device info
+      user.fcmTokens[existingTokenIndex].deviceInfo = deviceInfo || {};
+      user.fcmTokens[existingTokenIndex].registeredAt = new Date();
+    } else {
+      // Add new token
+      user.fcmTokens.push({
+        token,
+        deviceInfo: deviceInfo || {
+          userAgent: req.headers['user-agent'],
+          platform: 'web'
+        },
+        registeredAt: new Date()
+      });
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'FCM token registered successfully',
+      tokenCount: user.fcmTokens.length
+    });
+  } catch (err) {
+    console.error('Error registering FCM token:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @route   DELETE /api/notifications/unregister-token
+// @desc    Unregister FCM token
+// @access  Private
+router.delete('/unregister-token', auth, [
+  body('token').notEmpty().trim().withMessage('FCM token is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Remove token
+    user.fcmTokens = user.fcmTokens.filter(t => t.token !== token);
+    await user.save();
+
+    res.json({
+      message: 'FCM token unregistered successfully',
+      tokenCount: user.fcmTokens.length
+    });
+  } catch (err) {
+    console.error('Error unregistering FCM token:', err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;
+
+
+
 
