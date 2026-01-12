@@ -5,67 +5,68 @@ import './index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
-import { requestNotificationPermission } from './services/firebase'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const queryClient = new QueryClient()
 
-// Register service workers for PWA and Firebase Messaging
+// Register service workers asynchronously - don't block app startup
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // Register Firebase Messaging service worker first (needed for notifications)
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('Firebase Messaging SW registered: ', registration);
-        // Wait for service worker to be active before requesting permission
-        if (registration.active) {
-          // Small delay to ensure service worker is fully ready
-          setTimeout(() => {
-            requestNotificationPermission().catch(console.error);
-          }, 1000);
-        } else if (registration.installing) {
-          registration.installing.addEventListener('statechange', () => {
-            if (registration.installing.state === 'activated') {
-              setTimeout(() => {
-                requestNotificationPermission().catch(console.error);
-              }, 1000);
-            }
-          });
-        } else if (registration.waiting) {
-          // Service worker is waiting, activate it
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          registration.waiting.addEventListener('statechange', () => {
-            if (registration.waiting?.state === 'activated') {
-              setTimeout(() => {
-                requestNotificationPermission().catch(console.error);
-              }, 1000);
-            }
-          });
-        }
-      })
-      .catch((registrationError) => {
-        console.log('Firebase Messaging SW registration failed: ', registrationError);
-      });
-
-    // Register PWA service worker (separate from Firebase)
+  // Use requestIdleCallback if available, otherwise setTimeout
+  const registerServiceWorkers = () => {
+    // Register PWA service worker first (more essential)
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('PWA SW registered: ', registration);
       })
       .catch((registrationError) => {
-        console.log('PWA SW registration failed: ', registrationError);
+        console.warn('PWA SW registration failed (non-critical): ', registrationError);
       });
-  });
+
+    // Register Firebase Messaging service worker (can fail gracefully)
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log('Firebase Messaging SW registered: ', registration);
+        // Try to initialize notifications after a delay (don't block startup)
+        setTimeout(() => {
+          try {
+            import('./services/firebase').then(({ requestNotificationPermission }) => {
+              requestNotificationPermission().catch((err) => {
+                console.warn('Notification permission request failed (non-critical):', err);
+              });
+            }).catch((err) => {
+              console.warn('Firebase module load failed (non-critical):', err);
+            });
+          } catch (err) {
+            console.warn('Firebase initialization error (non-critical):', err);
+          }
+        }, 3000); // Delay to ensure app is loaded first
+      })
+      .catch((registrationError) => {
+        console.warn('Firebase Messaging SW registration failed (non-critical): ', registrationError);
+      });
+  };
+
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(registerServiceWorkers, { timeout: 5000 });
+  } else {
+    window.addEventListener('load', () => {
+      setTimeout(registerServiceWorkers, 1000);
+    });
+  }
 }
 
+// Render app immediately - don't wait for service workers
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 )
 

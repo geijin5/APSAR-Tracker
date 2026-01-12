@@ -18,23 +18,30 @@ export const useNotifications = () => {
   // Request notification permission on mount if user is logged in
   useEffect(() => {
     if (user) {
-      requestNotificationPermission().then(async (token) => {
-        if (token) {
-          console.log('Notification permission granted, token:', token);
-          // Register token with backend
-          try {
-            const deviceInfo = {
-              userAgent: navigator.userAgent,
-              platform: navigator.platform,
-              language: navigator.language
-            };
-            await api.post('/notifications/register-token', { token, deviceInfo });
-            console.log('FCM token registered with backend');
-          } catch (error) {
-            console.error('Error registering FCM token with backend:', error);
+      // Delay to ensure Firebase is initialized
+      const timer = setTimeout(() => {
+        requestNotificationPermission().then(async (token) => {
+          if (token) {
+            console.log('Notification permission granted, token:', token);
+            // Register token with backend
+            try {
+              const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language
+              };
+              await api.post('/notifications/register-token', { token, deviceInfo });
+              console.log('FCM token registered with backend');
+            } catch (error) {
+              console.warn('Error registering FCM token with backend (non-critical):', error);
+            }
           }
-        }
-      }).catch(console.error);
+        }).catch((err) => {
+          console.warn('Notification permission request failed (non-critical):', err);
+        });
+      }, 2000); // Delay to ensure app is fully loaded
+
+      return () => clearTimeout(timer);
     }
   }, [user]);
 

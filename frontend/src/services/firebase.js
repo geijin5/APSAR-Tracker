@@ -14,26 +14,33 @@ const firebaseConfig = {
   measurementId: "G-995XT5K0FZ"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase with error handling
+let app = null;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  console.warn('Firebase app initialization failed (non-critical):', error);
+}
 
 // Initialize Analytics (only in browser, not in service worker)
 let analytics = null;
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+if (typeof window !== 'undefined' && app) {
   try {
     analytics = getAnalytics(app);
   } catch (error) {
-    console.warn('Firebase Analytics initialization failed:', error);
+    // Analytics failures are non-critical - app should still work
+    console.warn('Firebase Analytics initialization failed (non-critical):', error);
   }
 }
 
 // Initialize Firebase Cloud Messaging
 let messaging = null;
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && app) {
   try {
     messaging = getMessaging(app);
   } catch (error) {
-    console.warn('Firebase Messaging initialization failed:', error);
+    // Messaging failures are non-critical - app should still work
+    console.warn('Firebase Messaging initialization failed (non-critical):', error);
   }
 }
 
