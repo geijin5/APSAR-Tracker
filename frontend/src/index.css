@@ -29,15 +29,8 @@
     text-size-adjust: 100%;
   }
   
-  /* Better scrolling on mobile */
-  @media (max-width: 640px) {
-    body {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
-  }
+  /* Better scrolling on mobile - removed fixed positioning that can cause white screen */
+  /* The fixed positioning was preventing content from rendering properly */
 }
 
 @layer components {
